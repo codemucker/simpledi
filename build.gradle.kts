@@ -1,9 +1,10 @@
 plugins {
-    `kotlin-dsl`
+    alias(libs.plugins.kotlin.dsl)
     idea
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.kotlin.dokka) apply false
 }
 
 java {
@@ -39,10 +40,10 @@ allprojects {
     }
 }
 
-
 // from https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-gradle-registry
 subprojects {
     apply(plugin = "maven-publish")
+
     configure<PublishingExtension> {
         repositories {
             maven {
@@ -54,12 +55,38 @@ subprojects {
                 }
             }
         }
+
         publications {
             register<MavenPublication>("gpr") {
                 //TODO:
-         //       from(components["java"])
+                //       from(components["java"])0
+                pom {
+                    name.set("Codemucker Kotlin")
+                    description.set("Codemucker kotlin libraries")
+                    licenses {
+                        license {
+                            name.set("Apache")
+                            url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                        }
+                    }
+                    url.set("https://github.com/codemucker/codemucker-kotlin")
+                    issueManagement {
+                        system.set("Github")
+                        url.set("https://github.com/codemucker/codemucker-kotlin/issues")
+                    }
+                    scm {
+                        connection.set("https://github.com/codemucker/codemucker-kotlin.git")
+                        url.set("https://github.com/codemucker/codemucker-kotlin")
+                    }
+                    developers {
+                        developer {
+                            name.set("Bert van Brakel")
+                        }
+                    }
+                }
             }
         }
     }
+
 }
 

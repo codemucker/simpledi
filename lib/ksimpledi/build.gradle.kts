@@ -2,6 +2,7 @@ version = libs.versions.codemucker.ksimpledi
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.dokka)
 }
 
 kotlin {
