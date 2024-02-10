@@ -1,14 +1,33 @@
 version = libs.versions.codemucker.ksimpledi
 
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.multiplatform)
 }
 
-dependencies {
-    testImplementation(libs.kotlin.test.junit)
-    testImplementation(libs.junit.jupiter.engine)
+kotlin {
+    applyDefaultHierarchyTemplate()
+    jvm()
 
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    implementation(libs.kotlinx.coroutines.core)
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(kotlin("stdlib"))
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation(libs.kotlin.test.junit)
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
+            }
+        }
+        val jvmTest by getting {
+            dependencies {
+                implementation(libs.junit.jupiter.engine)
+            }
+        }
+    }
 }

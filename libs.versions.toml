@@ -5,8 +5,8 @@ java-target = "11"
 
 # codemucker
 
-codemucker-klang="0.0.1"
-codemucker-ksimpledi="0.0.1"
+codemucker-klang = "0.0.1"
+codemucker-ksimpledi = "0.0.1"
 
 # libs
 junit-jupiter = "5.9.3"
@@ -15,7 +15,8 @@ kotlinx-datetime = "0.5.0"
 kotlinx-serialization = "1.6.2"
 
 # plugins
-kotlin = "1.9.0"
+kotlin = "1.9.22"
+foojay-resolver = "0.4.0"
 
 [libraries]
 junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit-jupiter" }
@@ -31,3 +32,6 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+# used to resolve/dwnload jdk's
+foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay-resolver" }
