@@ -33,13 +33,16 @@ typealias Fail<TError> = OkOrFail.Fail<TError>
 @Serializable
 sealed class OkOrFail<out TValue, out TError>  {
     data class Ok<out TValue>(val value: TValue) : OkOrFail<TValue, Nothing>() {
-        
+
+        @JvmName("mapValue")
         inline fun <T> map(block: (value:TValue) -> T): T {
             return block(this.value)
         }
     }
 
     class Fail<out TError>(val error: TError) : OkOrFail<Nothing, TError>(), ToException {
+
+        @JvmName("mapError")
         inline fun <T> map(block: (error:TError) -> T): T {
             return block(error)
         }
@@ -53,7 +56,7 @@ sealed class OkOrFail<out TValue, out TError>  {
         }
     }
 
-    inline fun <T> map(block: (OkOrFail<out TValue, out TError>) -> T): T {
+    inline fun <T> map(block: (OkOrFail<TValue, TError>) -> T): T {
         return block(this)
     }
 
@@ -71,21 +74,21 @@ sealed class OkOrFail<out TValue, out TError>  {
         }
     }
 
-    inline fun isOk(): Boolean {
+    fun isOk(): Boolean {
         when (this) {
             is Ok -> return true
             is Fail -> return false
         }
     }
 
-    inline fun isFail() = !isOk()
+    fun isFail() = !isOk()
 
     /**
      * If this is a fail response, then convert it to an exception and throw it
      *
      * Invoked {@link Fail#toException}
      */
-    inline fun onFailThrow() {
+    fun onFailThrow() {
         if (this is Fail) {
             throw toException()
         }
@@ -104,7 +107,7 @@ sealed class OkOrFail<out TValue, out TError>  {
         return this
     }
 
-    inline fun toKotlinResult(): Result<TValue> {
+    fun toKotlinResult(): Result<TValue> {
         return when (this) {
             is Ok -> Result.success(value)
             is Fail -> throw toException()
@@ -150,14 +153,13 @@ sealed class OkOrFail<out TValue, out TError>  {
  */
 @Serializable
 data class SimpleError private constructor(
-    val message: String,
     @Serializable(with = ExceptionSerializer::class)
-    val cause: Exception?
+    val cause: Exception?,
+    val message: String,
 ) {
 
-    constructor(message: String) : this(message, null)
+    constructor(message: String) : this(null, message)
     constructor(cause: Exception) : this(cause.message ?: cause.toString(), cause)
 
-    constructor(message: String, cause: Exception) : this(message, cause as Exception?)
-
+    constructor(message: String, cause: Exception) : this(cause as Exception?, message)
 }
