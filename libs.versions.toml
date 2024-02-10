@@ -37,4 +37,3 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 # used to resolve/dwnload jdk's
 foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay-resolver" }
 kotlin-dokka = { id = "org.jetbrains.dokka", version = "1.9.10" }
-kotlin-dsl = { id = "org.gradle.kotlin.kotlin-dsl", version = "4.3.0" }
