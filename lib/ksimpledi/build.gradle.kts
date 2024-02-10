@@ -1,3 +1,5 @@
+version = libs.versions.codemucker.ksimpledi
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
 }
