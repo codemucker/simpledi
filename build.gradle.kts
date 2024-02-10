@@ -44,13 +44,18 @@ allprojects {
 subprojects {
     apply(plugin = "maven-publish")
 
+    val javadocJar by tasks.registering(Jar::class) {
+        archiveClassifier.set("javadoc")
+    }
+
     configure<PublishingExtension> {
         repositories {
             maven {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/codemucker/codemucker-kotlin")
                 credentials {
-                    username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+                    username =
+                        project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
                     password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
                 }
             }
@@ -58,6 +63,8 @@ subprojects {
 
         publications {
             register<MavenPublication>("gpr") {
+
+                artifact(javadocJar.get())
                 //TODO:
                 //       from(components["java"])0
                 pom {
