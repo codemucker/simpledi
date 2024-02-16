@@ -71,9 +71,10 @@ subprojects {
                 credentials {
                     username =
                         project.findProperty("gpr.user") as String?
-                            ?: System.getenv("GITHUB_USERNAME")
+                            ?: System.getenv("USERNAME")
                     password =
-                        project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+                        project.findProperty("gpr.key") as String?
+                            ?: System.getenv("TOKEN")
                 }
             }
         }
