@@ -47,14 +47,14 @@ jobs:
       # The GITHUB_USERNAME and GITHUB_TOKEN need to correspond to the credentials environment variables used in
       # the publishing section of your build.gradle
       # see https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-gradle
-    - name: Publish to GitHub Packages
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # The GITHUB_REF tag comes in the format 'refs/tags/xxx'.
-      # If we split on '/' and take the 3rd value,
-      # we can get the release name.
-      run: |
-        NEW_VERSION=$(echo "${GITHUB_REF}" | cut -d "/" -f3)
-        echo "New version: ${NEW_VERSION}"
-        echo "Github username: ${GITHUB_ACTOR}"
-        ./gradlew -Pversion=${NEW_VERSION} publish --stacktrace --debug
+      - name: Publish to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # The GITHUB_REF tag comes in the format 'refs/tags/xxx'.
+        # If we split on '/' and take the 3rd value,
+        # we can get the release name.
+        run: |
+          NEW_VERSION=$(echo "${GITHUB_REF}" | cut -d "/" -f3)
+          echo "New version: ${NEW_VERSION}"
+          echo "Github username: ${GITHUB_ACTOR}"
+          ./gradlew -Pversion=${NEW_VERSION} publish --stacktrace --debug
