@@ -39,6 +39,6 @@ jobs:
     # the publishing section of your build.gradle
     # see https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-gradle
     - name: Publish to GitHub Packages
-      run: ./gradlew publish
+      run: ./gradlew publish --stacktrace --debug
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
