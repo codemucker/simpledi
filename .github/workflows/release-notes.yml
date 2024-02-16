@@ -1,4 +1,4 @@
-name: Generate Release notes
+name: Draft Release notes as PR
 
 on:
   push:
