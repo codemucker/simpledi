@@ -1,4 +1,4 @@
-name: Release Drafter
+name: Generate Release notes
 
 on:
   push:
