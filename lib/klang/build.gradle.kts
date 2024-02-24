@@ -1,10 +1,17 @@
+import org.jetbrains.kotlin.commonizer.OptimisticNumberCommonizationEnabledKey.alias
+
 version = libs.versions.codemucker.klang
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.dokka)
-    alias(libs.plugins.completeKotlin)
+}
+
+if (!"ci".equals(project.properties["build.profile"])) {
+    apply {
+        plugin("com.louiscad.complete-kotlin")
+    }
 }
 
 kotlin {

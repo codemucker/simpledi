@@ -3,9 +3,14 @@ version = libs.versions.codemucker.ksimpledi
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.dokka)
-    alias(libs.plugins.completeKotlin)
     //alias(libs.plugins.androidLibrary) //<- Android Gradle Plugin for android target libraries
     //alias(libs.plugins.androidApplication)  //<- Android Gradle Plugin for applications
+}
+
+if (!"ci".equals(project.properties["build.profile"])) {
+    apply {
+        plugin("com.louiscad.complete-kotlin")
+    }
 }
 
 kotlin {

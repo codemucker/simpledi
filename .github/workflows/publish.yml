@@ -31,7 +31,7 @@ jobs:
           settings-path: ${{ github.workspace }} # location for the settings.xml file
 
       - name: Setup build cache
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v4
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
@@ -42,7 +42,7 @@ jobs:
         uses: gradle/actions/setup-gradle@ec92e829475ac0c2315ea8f9eced72db85bb337a # v3.0.0
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build  -Dbuild.profile="ci"
 
       # The GITHUB_USERNAME and GITHUB_TOKEN need to correspond to the credentials environment variables used in
       # the publishing section of your build.gradle
@@ -57,4 +57,4 @@ jobs:
           NEW_VERSION=$(echo "${GITHUB_REF}" | cut -d "/" -f3)
           echo "New version: ${NEW_VERSION}"
           echo "Github username: ${GITHUB_ACTOR}"
-          ./gradlew -PreleaseVersion=${NEW_VERSION} publish --stacktrace --debug
+          ./gradlew -PreleaseVersion=${NEW_VERSION} publish --stacktrace --debug  -Dbuild.profile="ci"
