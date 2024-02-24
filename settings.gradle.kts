@@ -25,12 +25,7 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         google()
-    }
-
-    versionCatalogs {
-        create("libs") {
-            from(files("libs.versions.toml"))
-        }
+        //maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
     }
 }
 

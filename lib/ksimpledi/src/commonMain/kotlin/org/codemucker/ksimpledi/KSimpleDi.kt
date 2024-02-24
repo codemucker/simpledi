@@ -15,10 +15,70 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.io.Closeable
-import java.time.Duration
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import org.codemucker.klang.Disposable
+import org.codemucker.klang.Startable
+import kotlin.jvm.JvmInline
 import kotlin.reflect.KClass
+import kotlin.time.Duration
+
+interface SimpleDiPlatformHelper {
+
+    fun getDefaultServiceScope(): CoroutineScope = DEFAULT_SERVICE_SCOPE
+
+    fun getDefaultInitScope(): CoroutineScope = DEFAULT_INIT_SCOPE
+
+    fun <T> toStartable(obj: T): (suspend (T) -> Unit)? {
+        if (obj is Startable) {
+            return { obj.start() }
+        }
+        return null;
+    }
+
+    /**
+     * If this object can be converted to a disposable, using the platforms own disposable/closeable
+     * interfaces/methods. E.g.in the JVM, this would map to 'AutoCloseable.close()'
+     *
+     * Return null if no disposable mapping exists
+     */
+    fun toDisposable(obj: Any?): Disposable? {
+        if (obj is Disposable) {
+            return obj
+        }
+        return null
+    }
+
+    /**
+     * Perform any additional health checks/logging etc
+     */
+    fun <T> on(phase: Phase, factory: InstanceType<T>, instance: T) {
+
+    }
+
+    /**
+     * Log/handle any errors
+     */
+    fun onError(source: Any, throwable: Throwable) {
+    }
+
+    companion object {
+        private val DEFAULT_SERVICE_SCOPE: CoroutineScope = CoroutineScope(Dispatchers.Default)
+        private val DEFAULT_INIT_SCOPE: CoroutineScope = DEFAULT_SERVICE_SCOPE
+    }
+}
+
+private object platformHelper : SimpleDiPlatformHelper
+
+/**
+ * Common helper with the default common code implementation
+ */
+fun getCommonDefaultHelper(): SimpleDiPlatformHelper = platformHelper
+
+/**
+ * Return a platform customised helper
+ */
+expect fun getPlatformHelper(): SimpleDiPlatformHelper
 
 /**
  * val instanceSomeClass = get<SomeClass> {
@@ -72,7 +132,8 @@ value class FactoryParam3Instance<T, P1, P2, P3>(private val factory: InstanceTy
 
 @JvmInline
 value class FactoryParam4Instance<T, P1, P2, P3, P4>(private val factory: InstanceType.ParamFactory4<T, P1, P2, P3, P4>) {
-    fun get(param1: P1, param2: P2, param3: P3, param4: P4): T = factory.build(param1, param2, param3, param4)
+    fun get(param1: P1, param2: P2, param3: P3, param4: P4): T =
+        factory.build(param1, param2, param3, param4)
 }
 
 sealed interface InstanceType<T> {
@@ -92,12 +153,10 @@ sealed interface InstanceType<T> {
      */
     suspend fun dispose(join: Boolean = false) {}
 
-    @FunctionalInterface
     fun interface Factory<T> : InstanceType<T> {
         fun build(): T
     }
 
-    @FunctionalInterface
     interface ParamFactory<T> : InstanceType<T> {
         fun build(vararg params: Any): T
 
@@ -113,35 +172,37 @@ sealed interface InstanceType<T> {
         }
     }
 
-    @FunctionalInterface
     fun interface ParamFactory1<T, TParam1> : InstanceType<T> {
         fun build(param: TParam1): T
     }
 
-    @FunctionalInterface
     fun interface ParamFactory2<T, TParam1, TParam2> : InstanceType<T> {
         fun build(param1: TParam1, param2: TParam2): T
     }
 
-    @FunctionalInterface
     fun interface ParamFactory3<T, TParam1, TParam2, TParam3> : InstanceType<T> {
         fun build(param1: TParam1, param2: TParam2, param3: TParam3): T
     }
 
-    @FunctionalInterface
     fun interface ParamFactory4<T, TParam1, TParam2, TParam3, TParam4> : InstanceType<T> {
         fun build(param1: TParam1, param2: TParam2, param3: TParam3, param4: TParam4): T
     }
 
-    class Singleton<T>(private val scope: KSimpleDiScope,
-                       private val factory: Factory<T>,
-                       private val eager: Boolean) :
+    class Singleton<T>(
+        private val scope: KSimpleDiScope,
+        private val factory: Factory<T>,
+        private val eager: Boolean
+    ) :
         InstanceType<T>, Instance<T> {
-        private val created = AtomicBoolean(false)
+        private var created = false
+
+        //lazy by default is synchronized
         val instance: T by lazy {
             scope.trackDispose(this)
             val obj = factory.build()
-            created.set(true)
+            getPlatformHelper().on(Phase.BeforeStart, this, obj)
+            created = true
+            getPlatformHelper().on(Phase.AfterStart, this, obj)
             obj
         }
 
@@ -158,10 +219,11 @@ sealed interface InstanceType<T> {
         }
 
         override suspend fun dispose(join: Boolean) {
-            if (created.get()) {
-                val obj = instance
-                if (obj is AutoCloseable) {
-                    obj.close()
+            if (created) {
+                try {
+                    getPlatformHelper().toDisposable(instance)?.dispose()
+                } catch (e: Exception) {
+                    getPlatformHelper().onError(this, e)
                 }
             }
         }
@@ -177,35 +239,32 @@ sealed interface InstanceType<T> {
         val stopFun: (suspend (T) -> Unit)?,
     ) : InstanceType<T>, Instance<T> {
 
-        private val started = AtomicBoolean(false)
+        private var running = false
         private var job: Job? = null
+
+        //lazy by default is synchronized
         val instance: T by lazy {
             scope.trackDispose(this)
             val obj = factory.build()
-            val runner = getRunner(obj)
-            if (runner != null) {
-                if (startAsync) {
-                    job = startScope.launch {
-                        runner(obj)
-                    }
-                } else {
-                    started.set(true)
+            getPlatformHelper().on(Phase.BeforeStart, this, obj)
+            val startable = toStartable(obj)
+            if (startable != null && startAsync) {
+                job = startScope.launch {
+                    startable(obj)
                 }
             }
-            started.set(true)
+            running = true
+            getPlatformHelper().on(Phase.AfterStart, this, obj)
             obj
         }
 
         override fun get() = instance
 
-        private fun getRunner(obj: T): (suspend (T) -> Unit)? {
+        private fun toStartable(obj: T): (suspend (T) -> Unit)? {
             if (startFun != null) {
                 return startFun
             }
-            if (obj is Runnable) {
-                return { obj.run() }
-            }
-            return null
+            return getPlatformHelper().toStartable(obj)
         }
 
         override suspend fun init() {
@@ -219,32 +278,31 @@ sealed interface InstanceType<T> {
         }
 
         override suspend fun dispose(join: Boolean) {
-            if (!started.get()) {
+            if (!running) {
                 return
             }
-            started.set(false)
+            getPlatformHelper().on(Phase.BeforeStop, this, instance)
+
+            running = false
             val obj = instance
             val j = job
 
             safeInvoke { stopFun?.invoke(obj) }
-            if (obj is AutoCloseable) {
-                safeInvoke { obj.close() }
-            }
-
+            safeInvoke { getPlatformHelper().toDisposable(obj)?.dispose() }
             if (j != null) {
                 j.cancel()
                 if (join) {
                     j.join()
                 }
             }
+            getPlatformHelper().on(Phase.AfterStop, this, obj)
         }
 
-        private inline fun safeInvoke(block:()->Unit) : Exception?{
+        private inline fun safeInvoke(block: () -> Unit) {
             return try {
                 block()
-                null
-            } catch(e:Exception){
-                e
+            } catch (e: Exception) {
+                getPlatformHelper().onError(this, e)
             }
         }
 
@@ -253,9 +311,9 @@ sealed interface InstanceType<T> {
 
 //@PublishedApi
 sealed class KSimpleDiStorage(
-    val couroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
+    val couroutineScope: CoroutineScope = getPlatformHelper().getDefaultServiceScope(),
 
-) : AutoCloseable {
+    ) : Disposable {
 
     val instances = mutableMapOf<KClass<*>, InstanceType<*>>()
 
@@ -267,13 +325,13 @@ sealed class KSimpleDiStorage(
         instances[T::class] = factory
     }
 
-    inline fun <reified T : Any> getInstanceWith(vararg parameters:Any): T {
+    inline fun <reified T : Any> getInstanceWith(vararg parameters: Any): T {
         return getInstance { params(*parameters) }
     }
 
     inline fun <reified T : Any> getInstance(noinline parameters: (InstanceType.ParamFactory.Params.() -> Unit)? = null): T {
         return getOrRun(parameters) {
-            error("No factory provided for class: ${T::class.java}")
+            error("No factory provided for class: ${T::class}")
         }
     }
 
@@ -297,7 +355,7 @@ sealed class KSimpleDiStorage(
     @Suppress("UNCHECKED_CAST")
     @PublishedApi
     internal fun <T : Any> getOrRun(
-        type:KClass<T>,
+        type: KClass<T>,
         parameters: (InstanceType.ParamFactory.Params.() -> Unit)? = null,
         block: (KClass<T>) -> T,
     ): T {
@@ -306,36 +364,45 @@ sealed class KSimpleDiStorage(
             is InstanceType.Service -> factory.instance as T
             is InstanceType.Factory -> factory.build() as T
             is InstanceType.ParamFactory -> {
-                val factoryParams = InstanceType.ParamFactory.Params().apply(requireNotNull(parameters)).parameters
+                val factoryParams =
+                    InstanceType.ParamFactory.Params().apply(requireNotNull(parameters)).parameters
                 factory.build(*factoryParams) as T
             }
+
             is InstanceType.ParamFactory1<*, *> -> {
-                val factoryParams = InstanceType.ParamFactory.Params().apply(requireNotNull(parameters)).parameters
-                ensureSize(factoryParams,1)
+                val factoryParams =
+                    InstanceType.ParamFactory.Params().apply(requireNotNull(parameters)).parameters
+                ensureSize(factoryParams, 1)
                 (factory as InstanceType.ParamFactory1<T, Any>).build(
                     factoryParams[0],
                 )
             }
+
             is InstanceType.ParamFactory2<*, *, *> -> {
-                val factoryParams = InstanceType.ParamFactory.Params().apply(requireNotNull(parameters)).parameters
-                ensureSize(factoryParams,2)
+                val factoryParams =
+                    InstanceType.ParamFactory.Params().apply(requireNotNull(parameters)).parameters
+                ensureSize(factoryParams, 2)
                 (factory as InstanceType.ParamFactory2<T, Any, Any>).build(
                     factoryParams[0],
                     factoryParams[1],
                 )
             }
+
             is InstanceType.ParamFactory3<*, *, *, *> -> {
-                val factoryParams = InstanceType.ParamFactory.Params().apply(requireNotNull(parameters)).parameters
-                ensureSize(factoryParams,3)
+                val factoryParams =
+                    InstanceType.ParamFactory.Params().apply(requireNotNull(parameters)).parameters
+                ensureSize(factoryParams, 3)
                 (factory as InstanceType.ParamFactory3<T, Any, Any, Any>).build(
                     factoryParams[0],
                     factoryParams[1],
                     factoryParams[2],
                 )
             }
+
             is InstanceType.ParamFactory4<*, *, *, *, *> -> {
-                val factoryParams = InstanceType.ParamFactory.Params().apply(requireNotNull(parameters)).parameters
-                ensureSize(factoryParams,4)
+                val factoryParams =
+                    InstanceType.ParamFactory.Params().apply(requireNotNull(parameters)).parameters
+                ensureSize(factoryParams, 4)
                 (factory as InstanceType.ParamFactory4<T, Any, Any, Any, Any>).build(
                     factoryParams[0],
                     factoryParams[1],
@@ -347,23 +414,26 @@ sealed class KSimpleDiStorage(
             null -> block(type)
         }
     }
-    private fun ensureSize(params:Array<out Any>, size:Int){
-        if(params.size != size){
-            throw IllegalArgumentException("Expected $size parameter${if(size < 1) "s" else ""}, but got ${params.size}")
+
+    private fun ensureSize(params: Array<out Any>, size: Int) {
+        if (params.size != size) {
+            throw IllegalArgumentException("Expected $size parameter${if (size < 1) "s" else ""}, but got ${params.size}")
         }
     }
 }
 
-private enum class Phase {
+public enum class Phase {
     BeforeStart,
     AfterStart,
     BeforeStop,
     AfterStop
 }
 
-open class KSimpleDiScope() : KSimpleDiStorage(), AutoCloseable {
+open class KSimpleDiScope() : KSimpleDiStorage(), Disposable {
 
-    //TODO: track order of init, so we can close in reverse order!
+    val initMutex = Mutex()
+
+    //track order of init, so we can close in reverse order
     private val factoriesInInitOrder = mutableListOf<InstanceType<*>>()
     private val childScopes = mutableListOf<ChildScopeInstance<KSimpleDiScope>>()
     private val phasesFunctions = mutableMapOf<Phase, MutableList<suspend () -> Unit>>()
@@ -415,8 +485,10 @@ open class KSimpleDiScope() : KSimpleDiStorage(), AutoCloseable {
      * Register the given factory to be disposed when the scope is stopped
      */
     internal fun trackDispose(factory: InstanceType<*>) {
-        synchronized(factoriesInInitOrder) {
-            factoriesInInitOrder.add(factory)
+        getPlatformHelper().getDefaultInitScope().launch {
+            initMutex.withLock {
+                factoriesInInitOrder.add(factory)
+            }
         }
     }
 
@@ -431,7 +503,7 @@ open class KSimpleDiScope() : KSimpleDiStorage(), AutoCloseable {
 
     class ChildScopeInstance<TScope : KSimpleDiScope>(val scopeFactory: () -> TScope) {
 
-        val scope:TScope by lazy {
+        val scope: TScope by lazy {
             scopeFactory()
         }
 
@@ -444,17 +516,11 @@ open class KSimpleDiScope() : KSimpleDiStorage(), AutoCloseable {
         }
     }
 
-    private fun getDisposables(): Collection<InstanceType<*>> {
-        synchronized(factoriesInInitOrder) {
-            return factoriesInInitOrder.reversed().copyOf()
-        }
-    }
-
     inline fun <T> get(instance: () -> Instance<T>): T {
         return instance().get()
     }
 
-    inline fun <reified T : Any> factory(factory: InstanceType.Factory<T>) : FactoryInstance<T> {
+    inline fun <reified T : Any> factory(factory: InstanceType.Factory<T>): FactoryInstance<T> {
         instance(factory)
         return FactoryInstance(factory)
     }
@@ -526,7 +592,7 @@ open class KSimpleDiScope() : KSimpleDiStorage(), AutoCloseable {
     /**
      * Synonym for stop
      */
-    override fun close() {
+    override fun dispose() {
         couroutineScope.launch {
             stop()
         }
@@ -538,10 +604,19 @@ open class KSimpleDiScope() : KSimpleDiStorage(), AutoCloseable {
     suspend fun stop(join: Boolean = false, waitFor: Duration? = null) {
         invokePhaseFuncs(Phase.BeforeStop)
 
-        for (factory in getDisposables()) {
-            factory.dispose(join = join)
+        var disposeFactories: List<InstanceType<*>>
+        initMutex.withLock {
+            disposeFactories = factoriesInInitOrder.reversed().copyOf()
+            factoriesInInitOrder.clear()
         }
-        invokeChildScopes { it.close() }
+        for (factory in disposeFactories) {
+            try {
+                factory.dispose(join = join)
+            } catch (e: Exception) {
+                getPlatformHelper().onError(this, e)
+            }
+        }
+        invokeChildScopes { it.dispose() }
         invokePhaseFuncs(Phase.AfterStop)
     }
 

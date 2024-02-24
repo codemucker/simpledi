@@ -9,11 +9,13 @@ fun Long.formatBinarySize(): String {
 
     return when {
         this < kiloByteAsByte -> "${this.toDouble()} B"
-        this >= kiloByteAsByte && this < megaByteAsByte -> "${String.format("%.2f", (this / kiloByteAsByte))} KB"
-        this >= megaByteAsByte && this < gigaByteAsByte -> "${String.format("%.2f", (this / megaByteAsByte))} MB"
-        this >= gigaByteAsByte && this < teraByteAsByte -> "${String.format("%.2f", (this / gigaByteAsByte))} GB"
-        this >= teraByteAsByte && this < petaByteAsByte -> "${String.format("%.2f", (this / teraByteAsByte))} TB"
+        this >= kiloByteAsByte && this < megaByteAsByte -> "${format(this / kiloByteAsByte)} KB"
+        this >= megaByteAsByte && this < gigaByteAsByte -> "${format(this / megaByteAsByte)} MB"
+        this >= gigaByteAsByte && this < teraByteAsByte -> "${format(this / gigaByteAsByte)} GB"
+        this >= teraByteAsByte && this < petaByteAsByte -> "${format(this / teraByteAsByte)} TB"
         else -> "Bigger than 1024 TB"
     }
 }
 
+//TODO: format nicely
+private fun format(value: Double) = value.toString()

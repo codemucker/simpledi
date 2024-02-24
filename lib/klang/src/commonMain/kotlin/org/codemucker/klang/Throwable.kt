@@ -5,12 +5,24 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import java.io.PrintWriter
 
 interface HasThrowableAttributes {
     fun getAttributes(): Map<String, String>
 }
 
+/**
+ * Find the original cause of this throwable
+ */
+val Throwable.rootCauseOrNull: Throwable?
+    get() {
+        var rootCause: Throwable? = this
+        while (rootCause?.cause != null) {
+            rootCause = rootCause.cause
+        }
+        return rootCause
+    }
+
+@OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 @Serializable(with = ExceptionSerializer::class)
 class DeserializedException(
     message: String?,
@@ -21,15 +33,8 @@ class DeserializedException(
 ) :
     Exception(message, cause) {
 
-    override fun getStackTrace(): Array<StackTraceElement> {
-        return stackTrace.map {
-            StackTraceElement(
-                it.className ?: UNKNOWN,
-                it.methodName ?: UNKNOWN,
-                it.fileName,
-                it.lineNum
-            )
-        }.toTypedArray()
+    init {
+        printStackTrace()
     }
 
     override fun toString(): String {
@@ -41,13 +46,6 @@ class DeserializedException(
             sb.append("\t${att.key}: ${att.value}")
         }
         return sb.toString()
-    }
-
-    override fun printStackTrace(pw: PrintWriter) {
-        for (ele in stackTrace) {
-            pw.write(" at " + ele)
-            pw.println()
-        }
     }
 
     fun toSerializedThrowable(): SerializedThrowable {
@@ -65,10 +63,59 @@ class DeserializedException(
     }
 }
 
-@Serializable
-class Foo {
+interface ThrowableSerializerFactory {
+    fun toSerializedThrowable(
+        throwable: Throwable,
+        attributesExtractor: ((Throwable) -> Map<String, String>)? = null
+    ): SerializedThrowable {
+        if (throwable is DeserializedException) {
+            return throwable.toSerializedThrowable()
+        }
+        return SerializedThrowable(
+            message = throwable.message,
+            type = extractClassName(throwable),//::class.qualifiedName ?: throwable::class.simpleName ?: "unknown",
+            stackTrace = extractStacktrace(throwable),
 
+            attributes = extractThrowableAttributes(throwable, attributesExtractor),
+            cause = throwable.cause?.let { toSerializedThrowable(it, attributesExtractor) }
+        )
+    }
+
+    fun extractThrowableAttributes(
+        t: Throwable,
+        attributesExtractor: ((Throwable) -> Map<String, String>)?
+    ): Map<String, String> {
+        if (attributesExtractor != null) {
+            return attributesExtractor.invoke(t)
+        }
+        if (t is HasThrowableAttributes) {
+            return t.getAttributes()
+        }
+        return mapOf()
+    }
+
+    fun extractClassName(obj:Any) : String {
+        return obj::class.simpleName?: "unknown"
+    }
+
+    // platforms specific code to override and provide a custom value if availabel
+    fun extractStacktrace(throwable: Throwable): List<SerializedThrowable.SerializedStackTraceElement> {
+        return emptyList();
+    }
+
+    //so can have extension functions attached
+    companion object {
+
+    }
 }
+
+class DefaultThrowableSerializerFactory : ThrowableSerializerFactory
+
+private val defaultCommonFactory = DefaultThrowableSerializerFactory()
+fun getCommonDefaultSerializerFactory():ThrowableSerializerFactory  = defaultCommonFactory
+expect fun getPlatformSerializerFactory(): ThrowableSerializerFactory
+
+
 @Serializable
 data class SerializedThrowable(
     val message: String?,
@@ -117,48 +164,19 @@ data class SerializedThrowable(
         cause = this.cause?.toException()
     )
 
+    /**
+     * Attach extension functions to this
+     */
     companion object {
         fun from(
             throwable: Throwable,
             attributesExtractor: ((Throwable) -> Map<String, String>)? = null
-        ): SerializedThrowable {
-            if (throwable is DeserializedException) {
-                return throwable.toSerializedThrowable()
-            }
-            return SerializedThrowable(
-                message = throwable.message,
-                type = throwable::class.qualifiedName ?: throwable::class.simpleName ?: "unknown",
-                stackTrace = throwable.stackTrace.map {
-                    SerializedStackTraceElement(
-                        line = it.toString(),
-                        lineNum = it.lineNumber,
-                        fileName = it.fileName,
-                        methodName = it.methodName,
-                        className = it.className,
-                        native = it.isNativeMethod
-                    )
-                },
-                attributes = extractAttributes(throwable, attributesExtractor),
-                cause = throwable.cause?.let { from(it, attributesExtractor) }
-            )
-        }
-
-        private fun extractAttributes(
-            t: Throwable,
-            attributesExtractor: ((Throwable) -> Map<String, String>)?
-        ): Map<String, String> {
-            if (attributesExtractor != null) {
-                return attributesExtractor.invoke(t)
-            }
-            if (t is HasThrowableAttributes) {
-                return t.getAttributes()
-            }
-            return mapOf()
-        }
+        ) = getPlatformSerializerFactory().toSerializedThrowable(throwable, attributesExtractor)
     }
 }
 
 object ThrowableSerializer : KSerializer<Throwable> {
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
     override val descriptor: SerialDescriptor =
         SerialDescriptor("java.lang.Throwable", SerializedThrowable.serializer().descriptor)
 
@@ -176,6 +194,7 @@ object ThrowableSerializer : KSerializer<Throwable> {
 }
 
 object ExceptionSerializer : KSerializer<Exception> {
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
     override val descriptor: SerialDescriptor =
         SerialDescriptor("java.lang.Exception", SerializedThrowable.serializer().descriptor)
 

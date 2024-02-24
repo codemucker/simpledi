@@ -1,4 +1,6 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 
 plugins {
     `kotlin-dsl`
@@ -27,9 +29,26 @@ idea {
     }
 }
 
+
+rootProject.plugins.withType<NodeJsRootPlugin> {
+    rootProject.the<NodeJsRootExtension>().apply {
+        nodeVersion = "21.0.0-v8-canary202309143a48826a08"
+        nodeDownloadBaseUrl = "https://nodejs.org/download/v8-canary"
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstallTask>().configureEach {
+    args.add("--ignore-engines")
+}
+
+
 allprojects {
-    group = "org.codemucker.kotlin"
-    //version = '1.0'
+
+    if (project.hasProperty("releaseVersion") && findProperty("releaseVersion") != "" ) {
+        project.version = project.findProperty("releaseVersion")
+    } else {
+        project.version = if (findProperty("version") === "unspecified") "0.0.1-SNAPSHOT" else "${version}-SNAPSHOT"
+    }
 
     repositories {
         mavenCentral()

@@ -34,7 +34,7 @@ typealias Fail<TError> = OkOrFail.Fail<TError>
 sealed class OkOrFail<out TValue, out TError>  {
     data class Ok<out TValue>(val value: TValue) : OkOrFail<TValue, Nothing>() {
 
-        @JvmName("mapValue")
+        //@JvmName("mapValue")
         inline fun <T> map(block: (value:TValue) -> T): T {
             return block(this.value)
         }
@@ -42,7 +42,7 @@ sealed class OkOrFail<out TValue, out TError>  {
 
     class Fail<out TError>(val error: TError) : OkOrFail<Nothing, TError>(), ToException {
 
-        @JvmName("mapError")
+        //@JvmName("mapError")
         inline fun <T> map(block: (error:TError) -> T): T {
             return block(error)
         }
@@ -56,9 +56,9 @@ sealed class OkOrFail<out TValue, out TError>  {
         }
     }
 
-    inline fun <T> map(block: (OkOrFail<TValue, TError>) -> T): T {
-        return block(this)
-    }
+//    inline fun <T> map(block: (OkOrFail<TValue, TError>) -> T): T {
+//        return block(this)
+//    }
 
     inline fun <T> to(ok: (value:TValue) -> T, fail: (TError) -> T): T {
         when (this) {
@@ -131,35 +131,5 @@ sealed class OkOrFail<out TValue, out TError>  {
     companion object {
 
         fun OkReturnNothing() = Ok(Unit)
-
-        fun Fail(message: String, cause: Exception): Fail<SimpleError> {
-            return Fail(SimpleError(message, cause))
-        }
-
-        fun Fail(cause: Exception): Fail<SimpleError> {
-            return Fail(SimpleError(cause))
-        }
-
-        fun Fail(message: String): Fail<SimpleError> {
-            return Fail(SimpleError(message))
-        }
     }
-}
-
-/**
- * Simple error which captures a message and/or an Exception
- *
- * This _allows_ for a cause but doesn't _require_ it. So no need for generating a stacktrace if not required
- */
-@Serializable
-data class SimpleError private constructor(
-    @Serializable(with = ExceptionSerializer::class)
-    val cause: Exception?,
-    val message: String,
-) {
-
-    constructor(message: String) : this(null, message)
-    constructor(cause: Exception) : this(cause.message ?: cause.toString(), cause)
-
-    constructor(message: String, cause: Exception) : this(cause as Exception?, message)
 }
