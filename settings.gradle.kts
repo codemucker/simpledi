@@ -31,5 +31,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "codemucker-kotlin"
 include("lib:klang")
+include("lib:kserialize")
 include("lib:ksimpledi")
 

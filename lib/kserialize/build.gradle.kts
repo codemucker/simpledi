@@ -4,6 +4,7 @@ version = libs.versions.codemucker.klang
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.dokka)
 }
 
@@ -33,13 +34,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(kotlin("stdlib"))
-                implementation(libs.kotlinx.coroutines.core)
-                api(libs.kotlinx.datetime)
-                api(libs.kotlinx.serialization)
-                api(libs.kotlinx.serialization.json)
-                api(libs.uuid)
-                api(libs.uri)
+                api(project(":lib:klang"))
             }
         }
         commonTest {
