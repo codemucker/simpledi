@@ -35,26 +35,29 @@ idea {
 rootProject.plugins.withType<NodeJsRootPlugin> {
     rootProject.the<NodeJsRootExtension>().apply {
         nodeVersion = "20.11.1"
-       // nodeDownloadBaseUrl = "https://nodejs.org/download/v8-canary"
+        // nodeDownloadBaseUrl = "https://nodejs.org/download/v8-canary"
     }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstallTask>().configureEach {
-    args.add("--ignore-engines")
+var projectVersion = ""
+if (findProperty("releaseVersion") != null) {
+    projectVersion = project.findProperty("releaseVersion") as String
+} else {
+    var version = file("${project.rootDir}/version.txt").readText().trim()
+    if (!version.endsWith("-SNAPSHOT")) {
+        version = "${version}-SNAPSHOT"
+    }
+    projectVersion = version
 }
+logger.warn("project.version is '{}'", projectVersion)
 
-
-
-
+tasks.withType<org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstallTask>()
+    .configureEach {
+        args.add("--ignore-engines")
+    }
 
 allprojects {
-
-    if (findProperty("releaseVersion") != null) {
-        project.version = project.findProperty("releaseVersion")
-    } else {
-        project.version =
-            if (findProperty("version") == null) "0.0.1-SNAPSHOT" else "${version}-SNAPSHOT"
-    }
+    project.version = projectVersion
 
     repositories {
         mavenCentral()
