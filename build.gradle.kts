@@ -26,6 +26,7 @@ kotlin {
 idea {
     module {
         setDownloadSources(true)
+
         setDownloadSources(true)
     }
 }
@@ -33,8 +34,8 @@ idea {
 
 rootProject.plugins.withType<NodeJsRootPlugin> {
     rootProject.the<NodeJsRootExtension>().apply {
-        nodeVersion = "21.0.0-v8-canary202309143a48826a08"
-        nodeDownloadBaseUrl = "https://nodejs.org/download/v8-canary"
+        nodeVersion = "20.11.1"
+       // nodeDownloadBaseUrl = "https://nodejs.org/download/v8-canary"
     }
 }
 
@@ -42,15 +43,16 @@ tasks.withType<org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstall
     args.add("--ignore-engines")
 }
 
+if (findProperty("releaseVersion") != null ) {
+    project.version = project.findProperty("releaseVersion")
+} else {
+    project.version = if (findProperty("version") == null ) "0.0.1-SNAPSHOT" else "${version}-SNAPSHOT"
+}
+
+logger.warn("PROJECT.VERSION '{}'", project.version)
+
 
 allprojects {
-
-    if (project.hasProperty("releaseVersion") && findProperty("releaseVersion") != "" ) {
-        project.version = project.findProperty("releaseVersion")
-    } else {
-        project.version = if (findProperty("version") === "unspecified") "0.0.1-SNAPSHOT" else "${version}-SNAPSHOT"
-    }
-
     repositories {
         mavenCentral()
         //maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")

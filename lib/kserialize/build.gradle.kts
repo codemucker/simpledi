@@ -1,7 +1,3 @@
-import org.jetbrains.kotlin.commonizer.OptimisticNumberCommonizationEnabledKey.alias
-
-version = libs.versions.codemucker.klang
-
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
@@ -17,7 +13,7 @@ if (!"ci".equals(project.properties["build.profile"])) {
 kotlin {
     applyDefaultHierarchyTemplate()
     jvm()
-    js {
+    js(IR) {
         browser()
         nodejs()
     }

@@ -3,11 +3,6 @@
 # minimuim supported java target version
 java-target = "11"
 
-# codemucker
-
-codemucker-klang = "0.0.1"
-codemucker-ksimpledi = "0.0.1"
-
 # libs
 junit-jupiter = "5.9.3"
 kotlinx-coroutines = "1.7.3"
