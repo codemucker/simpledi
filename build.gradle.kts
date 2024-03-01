@@ -43,16 +43,19 @@ tasks.withType<org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstall
     args.add("--ignore-engines")
 }
 
-if (findProperty("releaseVersion") != null ) {
-    project.version = project.findProperty("releaseVersion")
-} else {
-    project.version = if (findProperty("version") == null ) "0.0.1-SNAPSHOT" else "${version}-SNAPSHOT"
-}
 
-logger.warn("PROJECT.VERSION '{}'", project.version)
+
 
 
 allprojects {
+
+    if (findProperty("releaseVersion") != null) {
+        project.version = project.findProperty("releaseVersion")
+    } else {
+        project.version =
+            if (findProperty("version") == null) "0.0.1-SNAPSHOT" else "${version}-SNAPSHOT"
+    }
+
     repositories {
         mavenCentral()
         //maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
@@ -88,11 +91,25 @@ subprojects {
     configure<PublishingExtension> {
         repositories {
             maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/codemucker/codemucker-kotlin")
-                credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
+                if ((project.version as String).endsWith("-SNAPSHOT")) {
+                    name = "GitHubPackages"
+                    url = uri("https://maven.pkg.github.com/codemucker/codemucker-kotlin")
+                    credentials {
+                        username = project.findProperty("gpr.user") as String?
+                            ?: System.getenv("GITHUB_ACTOR")
+                        password = project.findProperty("gpr.key") as String?
+                            ?: System.getenv("GITHUB_TOKEN")
+                    }
+                } else {
+                    //TODO: sonatype, public maven repo
+                    name = "GitHubPackages"
+                    url = uri("https://maven.pkg.github.com/codemucker/codemucker-kotlin")
+                    credentials {
+                        username = project.findProperty("gpr.user") as String?
+                            ?: System.getenv("GITHUB_ACTOR")
+                        password = project.findProperty("gpr.key") as String?
+                            ?: System.getenv("GITHUB_TOKEN")
+                    }
                 }
             }
         }
