@@ -6,6 +6,11 @@
 # For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#Publishing-using-gradle
 
 name: Release and Publish Auto
+on:
+  #  release:
+  #    types: [ published ]
+  # manually run
+  workflow_dispatch:
 
 # Allow GitHub Actions to push changes to the repository (update version, tags etc)
 permissions:
