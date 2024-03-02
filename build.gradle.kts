@@ -45,13 +45,13 @@ release {
     tagTemplate.set("\${version}")
     versionPropertyFile.set("gradle.properties")
     //default:snapshotSuffix.set("-SNAPSHOT")
-    //pushReleaseVersionBranch.set("release")
+    pushReleaseVersionBranch.set("release")
 
     buildTasks.add("build")
 
     git {
         // the branch we branch from to create a new release
-        requireBranch.set("main")
+        requireBranch.set("release")
     }
 }
 
