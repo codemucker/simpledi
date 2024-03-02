@@ -5,16 +5,8 @@
 # This workflow will build a package using Gradle and then publish it to GitHub packages when a release is created
 # For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#Publishing-using-gradle
 
-name: Create release and Publish to Maven Repo
+name: Release and Publish Auto
 
-on:
-  #  release:
-  #    types: [ published ]
-  # manually run
-  workflow_dispatch:
-    inputs:
-      release_version:
-        description: 'New version to release'
 # Allow GitHub Actions to push changes to the repository (update version, tags etc)
 permissions:
   contents: write
@@ -63,16 +55,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Github username: ${GITHUB_ACTOR}"
-          ./gradlew -Pbuild.profile="ci" release publish
-#      - name: Build with Gradle
-#        run: ./gradlew build  -Dbuild.profile="ci"
-#
-#      # The GITHUB_USERNAME and GITHUB_TOKEN need to correspond to the credentials environment variables used in
-#      # the publishing section of your build.gradle
-#      # see https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-gradle
-#      - name: Publish to GitHub Packages
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: |
-#          echo "Github username: ${GITHUB_ACTOR}"
-#          ./gradlew -Prelease=true publish -Dbuild.profile="ci"
+          ./gradlew -Pbuild.profile="ci" -Prelease.useAutomaticVersion=true clean release publish
+
