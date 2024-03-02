@@ -57,5 +57,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Github username: ${GITHUB_ACTOR}"
-          ./gradlew -Prelease.useAutomaticVersion=true clean release
+          ./gradlew -Prelease.useAutomaticVersion=true clean release publish
 
