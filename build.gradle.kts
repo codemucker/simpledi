@@ -51,7 +51,7 @@ release {
 
     git {
         // the branch we branch from to create a new release
-        requireBranch.set("/release|main/")
+        requireBranch.set("main")
     }
 }
 
