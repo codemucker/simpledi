@@ -42,11 +42,12 @@ release {
     //default:preTagCommitMessage.set("[Gradle Release Plugin] - pre tag commit: ")
     //default:tagCommitMessage.set("[Gradle Release Plugin] - creating tag: ")
     //default:newVersionCommitMessage.set("[Gradle Release Plugin] - new version commit: ")
-    tagTemplate.set("\${version}")
+    tagTemplate.set("v\${version}")
     versionPropertyFile.set("gradle.properties")
     //default:snapshotSuffix.set("-SNAPSHOT")
     pushReleaseVersionBranch.set("release")
 
+    buildTasks.add("clean")
     buildTasks.add("build")
 
     git {

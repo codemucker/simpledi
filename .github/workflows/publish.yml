@@ -8,9 +8,10 @@
 name: Publish Tagged Release to Maven Repo
 
 on:
-  release:
-    types: [ published ]
-
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'v*.*.*-SNAPSHOT'
 env:
   IS_CI: true
 
@@ -44,9 +45,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ec92e829475ac0c2315ea8f9eced72db85bb337a # v3.0.0
 
-      - name: Build with Gradle
-        run: ./gradlew build
-
       # The GITHUB_USERNAME and GITHUB_TOKEN need to correspond to the credentials environment variables used in
       # the publishing section of your build.gradle
       # see https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-gradle
@@ -60,4 +58,4 @@ jobs:
           NEW_VERSION=$(echo "${GITHUB_REF}" | cut -d "/" -f3)
           echo "New version: ${NEW_VERSION}"
           echo "Github username: ${GITHUB_ACTOR}"
-          ./gradlew -Pversion=${NEW_VERSION} publish 
+          ./gradlew build -Pversion=${NEW_VERSION} publish 
