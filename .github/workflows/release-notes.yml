@@ -16,6 +16,9 @@ on:
 permissions:
   contents: read
 
+env:
+  IS_CI: true
+
 jobs:
   update_release_draft:
     permissions:

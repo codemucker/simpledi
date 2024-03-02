@@ -3,7 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.dokka)
 }
 
-if (!"ci".equals(project.properties["build.profile"])) {
+// only for developers
+if (System.getenv("IS_CI") == null) {
     apply {
         plugin("com.louiscad.complete-kotlin")
     }
