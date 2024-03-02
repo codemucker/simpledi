@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.kotlin.dokka)
     alias(libs.plugins.completeKotlin) apply false
+    alias(libs.plugins.gradleRelease)
 }
 
 java {
@@ -31,6 +32,27 @@ idea {
     }
 }
 
+release {
+    failOnCommitNeeded.set(true)
+    failOnPublishNeeded.set(true)
+    failOnSnapshotDependencies.set(true)
+    failOnUnversionedFiles.set(true)
+    failOnUpdateNeeded.set(true)
+    preTagCommitMessage.set("[Gradle Release Plugin] - pre tag commit: ")
+    tagCommitMessage.set("[Gradle Release Plugin] - creating tag: ")
+    newVersionCommitMessage.set("[Gradle Release Plugin] - new version commit: ")
+    tagTemplate.set("${version}")
+    versionPropertyFile.set("gradle.properties")
+    snapshotSuffix.set("-SNAPSHOT")
+    buildTasks.add("build")
+
+    git {
+        // the branch we branch from to create a new release
+        requireBranch.set("main")
+    }
+}
+
+
 
 rootProject.plugins.withType<NodeJsRootPlugin> {
     rootProject.the<NodeJsRootExtension>().apply {
@@ -39,17 +61,6 @@ rootProject.plugins.withType<NodeJsRootPlugin> {
     }
 }
 
-var projectVersion = ""
-if (findProperty("releaseVersion") != null) {
-    projectVersion = project.findProperty("releaseVersion") as String
-} else {
-    var version = file("${project.rootDir}/version.txt").readText().trim()
-    if (!version.endsWith("-SNAPSHOT")) {
-        version = "${version}-SNAPSHOT"
-    }
-    projectVersion = version
-}
-logger.warn("project.version is '{}'", projectVersion)
 
 tasks.withType<org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstallTask>()
     .configureEach {
@@ -57,8 +68,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstall
     }
 
 allprojects {
-    project.version = projectVersion
-
     repositories {
         mavenCentral()
         //maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
