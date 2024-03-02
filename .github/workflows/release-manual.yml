@@ -61,4 +61,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Github username: ${GITHUB_ACTOR}"
-          ./gradlew release
+          ./gradlew clean release publish
