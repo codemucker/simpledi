@@ -5,7 +5,8 @@ plugins {
     //alias(libs.plugins.androidApplication)  //<- Android Gradle Plugin for applications
 }
 
-if (!"ci".equals(project.properties["build.profile"])) {
+// only for developers
+if (System.getenv("IS_CI") == null) {
     apply {
         plugin("com.louiscad.complete-kotlin")
     }

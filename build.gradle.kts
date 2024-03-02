@@ -33,19 +33,19 @@ idea {
 }
 
 release {
-    failOnCommitNeeded.set(true)
-    failOnPublishNeeded.set(true)
-    failOnSnapshotDependencies.set(true)
+    //default:failOnCommitNeeded.set(true)
+    //default:failOnPublishNeeded.set(true)
+    //default:failOnSnapshotDependencies.set(true)
     //toolchains.xml and settings.xml cause this to fail
     failOnUnversionedFiles.set(false)
-    failOnUpdateNeeded.set(true)
-    preTagCommitMessage.set("[Gradle Release Plugin] - pre tag commit: ")
-    tagCommitMessage.set("[Gradle Release Plugin] - creating tag: ")
-    newVersionCommitMessage.set("[Gradle Release Plugin] - new version commit: ")
+    //default:failOnUpdateNeeded.set(true)
+    //default:preTagCommitMessage.set("[Gradle Release Plugin] - pre tag commit: ")
+    //default:tagCommitMessage.set("[Gradle Release Plugin] - creating tag: ")
+    //default:newVersionCommitMessage.set("[Gradle Release Plugin] - new version commit: ")
     tagTemplate.set("\${version}")
     versionPropertyFile.set("gradle.properties")
-    snapshotSuffix.set("-SNAPSHOT")
-    pushReleaseVersionBranch.set("release")
+    //default:snapshotSuffix.set("-SNAPSHOT")
+    //pushReleaseVersionBranch.set("release")
 
     buildTasks.add("build")
 
