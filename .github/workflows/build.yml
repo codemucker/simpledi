@@ -30,10 +30,10 @@ on:
       - '**/*.md'
       - '*.nix'
       - 'bin/*.sh'
-  # cancel an existing build if new changes have been pushed to the branch or PR
-  concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
+# cancel an existing build if new changes have been pushed to the branch or PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   IS_CI: true
