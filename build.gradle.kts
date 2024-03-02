@@ -36,7 +36,8 @@ release {
     failOnCommitNeeded.set(true)
     failOnPublishNeeded.set(true)
     failOnSnapshotDependencies.set(true)
-    failOnUnversionedFiles.set(true)
+    //toolchains.xml and settings.xml cause this to fail
+    failOnUnversionedFiles.set(false)
     failOnUpdateNeeded.set(true)
     preTagCommitMessage.set("[Gradle Release Plugin] - pre tag commit: ")
     tagCommitMessage.set("[Gradle Release Plugin] - creating tag: ")
