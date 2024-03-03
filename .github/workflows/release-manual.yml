@@ -56,8 +56,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: wrapper
-        env:
+      - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
+      - run: |
           echo "Github username: ${GITHUB_ACTOR}"
           gradle -Pversion="${release_version}" release
