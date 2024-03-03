@@ -58,9 +58,3 @@ jobs:
         run: |
           echo "Github username: ${GITHUB_ACTOR}"
           ./gradlew -Prelease.useAutomaticVersion=true release
-      - name: Publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Github username: ${GITHUB_ACTOR}"
-          ./gradlew publish
