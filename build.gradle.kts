@@ -72,6 +72,11 @@ tasks.withType<org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstall
         args.add("--ignore-engines")
     }
 
+// only want to publish after the release version has been set, but before it's updated to the next version
+tasks.named("afterReleaseBuild") {
+    finalizedBy("publish")
+}
+
 allprojects {
     repositories {
         mavenCentral()
