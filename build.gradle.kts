@@ -27,8 +27,7 @@ kotlin {
 idea {
     module {
         setDownloadSources(true)
-
-        setDownloadSources(true)
+        setDownloadJavadoc(true)
     }
 }
 
