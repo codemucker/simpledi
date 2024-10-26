@@ -60,7 +60,7 @@ release {
 
 rootProject.plugins.withType<NodeJsRootPlugin> {
     rootProject.the<NodeJsRootExtension>().apply {
-        nodeVersion = "20.11.1"
+        version = "20.11.1"
         // nodeDownloadBaseUrl = "https://nodejs.org/download/v8-canary"
     }
 }

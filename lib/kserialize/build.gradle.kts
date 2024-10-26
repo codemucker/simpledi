@@ -14,19 +14,19 @@ if (System.getenv("IS_CI") == null) {
 kotlin {
     applyDefaultHierarchyTemplate()
     jvm()
-    js(IR) {
+    js {
         browser()
         nodejs()
     }
-    linuxX64()
-    iosX64()
 //    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
 //    wasmJs{
 //        browser()
 //        nodejs()
 //    }
+    linuxX64()
+    macosX64()
     mingwX64()
-
+    iosX64()
 
     sourceSets {
         commonMain {
@@ -50,6 +50,7 @@ kotlin {
             }
         }
     }
+    tasks.register("testClasses")
 }
 
 repositories {
