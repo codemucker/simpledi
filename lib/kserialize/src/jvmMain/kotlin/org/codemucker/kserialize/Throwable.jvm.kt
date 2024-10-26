@@ -1,9 +1,5 @@
 package org.codemucker.kserialize
 
-import org.codemucker.kserialize.DeserializedException
-import org.codemucker.kserialize.SerializedThrowable
-import org.codemucker.kserialize.ThrowableSerializerFactory
-
 private class JvmThrowableSerializerFactory : ThrowableSerializerFactory {
     override fun extractStacktrace(throwable: Throwable): List<SerializedThrowable.SerializedStackTraceElement> {
         return throwable.stackTrace.map {

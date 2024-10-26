@@ -11,7 +11,7 @@ interface HasThrowableAttributes {
 }
 
 @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-@Serializable(with = ExceptionSerializer::class)
+@Serializable(with = DeserializedExceptionSerializer::class)
 class DeserializedException(
     message: String?,
     val type: String,
@@ -194,6 +194,24 @@ object ExceptionSerializer : KSerializer<Exception> {
     }
 
     override fun deserialize(decoder: Decoder): Exception {
+        val serializedThrowable = decoder.decodeSerializableValue(SerializedThrowable.serializer())
+        return serializedThrowable.toException()
+    }
+}
+
+object DeserializedExceptionSerializer : KSerializer<DeserializedException> {
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+    override val descriptor: SerialDescriptor =
+        SerialDescriptor("java.lang.Exception", SerializedThrowable.serializer().descriptor)
+
+    override fun serialize(encoder: Encoder, value: DeserializedException) {
+        encoder.encodeSerializableValue(
+            SerializedThrowable.serializer(),
+            SerializedThrowable.from(value)
+        )
+    }
+
+    override fun deserialize(decoder: Decoder): DeserializedException {
         val serializedThrowable = decoder.decodeSerializableValue(SerializedThrowable.serializer())
         return serializedThrowable.toException()
     }

@@ -11,7 +11,7 @@ class KSimpleScopeTest {
     @Test fun singletonTest() {
         val scope = KSimpleDiScope()
 
-        val bar = scope.singleton{
+        val bar = scope.singleton(false) {
             Bar()
         }
         val foo = scope.singleton{
@@ -64,6 +64,25 @@ class KSimpleScopeTest {
         assertTrue(  b4.text == "four" )
 
     }
+
+//    @Test fun customFactoryTest() {
+//        val scope = KSimpleDiScope()
+//
+//        val bar = scope.factoryCustom() { p1:String->
+//            Bar( p1 )
+//        }
+//
+//        val b1 = bar.get("one")
+//        val b2 = bar.get("two")
+//        val b3 = scope.getInstance<Bar>( {params("three")})
+//        val b4 = scope.getInstanceWith<Bar>( "four")
+//
+//        assertTrue(  b1.text == "one" )
+//        assertTrue(  b2.text == "two" )
+//        assertTrue(  b3.text == "three" )
+//        assertTrue(  b4.text == "four" )
+//
+//    }
 }
 
 class Bar(val text:String?= null)

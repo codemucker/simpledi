@@ -36,10 +36,14 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 # used to resolve/dwnload jdk's
 foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay-resolver" }
-kotlin-dokka = { id = "org.jetbrains.dokka", version = "1.9.10" }
+kotlin-dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
 
-androidLibrary = { id = "com.android.library", version = "8.2.2" }
-androidApplication = { id = "com.android.application", version = "8.2.2" }
+# the next two must use the same version. Needs to be compat with the kotlin version
+# and kotlin plugin. See https://kotlinlang.org/docs/gradle-configure-project.html#apply-the-plugin
+androidLibrary = { id = "com.android.library", version = "8.5.2" }
+androidApplication = { id = "com.android.application", version = "8.5.2" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+
 # auto download symbols for targets not supporte don the current hos. TODO: security scan
 completeKotlin = { id = "com.louiscad.complete-kotlin", version = "1.1.0" }
 gradleRelease = { id = "net.researchgate.release", version = "3.0.2" }

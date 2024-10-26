@@ -6,9 +6,10 @@ package org.codemucker.ksimpledi
  * Also see https://proandroiddev.com/simplest-dependency-injection-tool-using-kotlin-fun-interfaces-and-sealed-classes-988fec67b8ff
  *
  * Original author Aleksei Cherniaev, klukwist@gmail.com
+ * Modified by Bert van Brakel
  *
- * THis version has been heavily modified to also support starting/stopping 'services', configurable 'modules', eager
- * loading etc, and couroutine support
+ * This version has been heavily modified to also support starting/stopping 'services', configurable 'modules', eager
+ * loading, co-routine support, along with sub modules, typesafe param factories, etc
  */
 
 import kotlinx.coroutines.CoroutineScope
@@ -33,7 +34,7 @@ interface SimpleDiPlatformHelper {
         if (obj is Startable) {
             return { obj.start() }
         }
-        return null;
+        return null
     }
 
     /**
@@ -138,6 +139,8 @@ value class FactoryParam4Instance<T, P1, P2, P3, P4>(private val factory: Instan
 
 sealed interface InstanceType<T> {
 
+    val key: String
+
     /**
      * Invoked once by default when scope started
      */
@@ -153,7 +156,7 @@ sealed interface InstanceType<T> {
      */
     suspend fun dispose(join: Boolean = false) {}
 
-    fun interface Factory<T> : InstanceType<T> {
+    interface Factory<T> : InstanceType<T> {
         fun build(): T
     }
 
@@ -172,26 +175,27 @@ sealed interface InstanceType<T> {
         }
     }
 
-    fun interface ParamFactory1<T, TParam1> : InstanceType<T> {
+    interface ParamFactory1<T, TParam1> : InstanceType<T> {
         fun build(param: TParam1): T
     }
 
-    fun interface ParamFactory2<T, TParam1, TParam2> : InstanceType<T> {
+    interface ParamFactory2<T, TParam1, TParam2> : InstanceType<T> {
         fun build(param1: TParam1, param2: TParam2): T
     }
 
-    fun interface ParamFactory3<T, TParam1, TParam2, TParam3> : InstanceType<T> {
+    interface ParamFactory3<T, TParam1, TParam2, TParam3> : InstanceType<T> {
         fun build(param1: TParam1, param2: TParam2, param3: TParam3): T
     }
 
-    fun interface ParamFactory4<T, TParam1, TParam2, TParam3, TParam4> : InstanceType<T> {
+    interface ParamFactory4<T, TParam1, TParam2, TParam3, TParam4> : InstanceType<T> {
         fun build(param1: TParam1, param2: TParam2, param3: TParam3, param4: TParam4): T
     }
 
     class Singleton<T>(
         private val scope: KSimpleDiScope,
         private val factory: Factory<T>,
-        private val eager: Boolean
+        private val eager: Boolean,
+        override val key: String
     ) :
         InstanceType<T>, Instance<T> {
         private var created = false
@@ -237,6 +241,7 @@ sealed interface InstanceType<T> {
         val startAsync: Boolean,
         val startFun: (suspend (T) -> Unit)?,
         val stopFun: (suspend (T) -> Unit)?,
+        override val key: String,
     ) : InstanceType<T>, Instance<T> {
 
         private var running = false
@@ -305,7 +310,6 @@ sealed interface InstanceType<T> {
                 getPlatformHelper().onError(this, e)
             }
         }
-
     }
 }
 
@@ -315,14 +319,15 @@ sealed class KSimpleDiStorage(
 
     ) : Disposable {
 
-    val instances = mutableMapOf<KClass<*>, InstanceType<*>>()
+    val instancesByKey = mutableMapOf<String, InstanceType<*>>()
 
     @PublishedApi
-    internal inline fun <reified T : Any> instance(factory: InstanceType<T>) {
-        check(instances[T::class] == null) {
-            "Definition for ${T::class} already added."
+    internal fun <T : Any> instance(factory: InstanceType<T>) {
+        //TODO: add mutex for multi threading support
+        check(instancesByKey[factory.key] == null) {
+            "Definition with key '${factory.key}' already added."
         }
-        instances[T::class] = factory
+        instancesByKey[factory.key] = factory
     }
 
     inline fun <reified T : Any> getInstanceWith(vararg parameters: Any): T {
@@ -352,14 +357,25 @@ sealed class KSimpleDiStorage(
         return getOrRun(T::class, parameters, block)
     }
 
-    @Suppress("UNCHECKED_CAST")
     @PublishedApi
     internal fun <T : Any> getOrRun(
         type: KClass<T>,
         parameters: (InstanceType.ParamFactory.Params.() -> Unit)? = null,
         block: (KClass<T>) -> T,
     ): T {
-        return when (val factory = instances[type]) {
+        val key = toCacheKey(type, null)
+        return getOrRun(type, key, parameters, block)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @PublishedApi
+    internal fun <T : Any> getOrRun(
+        type: KClass<T>,
+        key: String,
+        parameters: (InstanceType.ParamFactory.Params.() -> Unit)? = null,
+        block: (KClass<T>) -> T,
+    ): T {
+        return when (val factory = instancesByKey[key]) {
             is InstanceType.Singleton -> factory.instance as T
             is InstanceType.Service -> factory.instance as T
             is InstanceType.Factory -> factory.build() as T
@@ -415,21 +431,53 @@ sealed class KSimpleDiStorage(
         }
     }
 
-    private fun ensureSize(params: Array<out Any>, size: Int) {
-        if (params.size != size) {
-            throw IllegalArgumentException("Expected $size parameter${if (size < 1) "s" else ""}, but got ${params.size}")
+
+    companion object {
+        private fun ensureSize(params: Array<out Any>, size: Int) {
+            if (params.size != size) {
+                throw IllegalArgumentException("Expected $size parameter${if (size < 1) "s" else ""}, but got ${params.size}")
+            }
+        }
+
+        fun toCacheKey(type: KClass<*>, key: String?): String {
+            return type.toString() + ":" + (key ?: CACHE_KEY_DEFAULT)
         }
     }
 }
 
-public enum class Phase {
+enum class Phase {
     BeforeStart,
     AfterStart,
     BeforeStop,
     AfterStop
 }
 
-open class KSimpleDiScope() : KSimpleDiStorage(), Disposable {
+const val CACHE_KEY_DEFAULT = "::default::"
+
+class SimpleInstanceCache {
+    val mutex = Mutex()
+    private val cachedByKey = mutableMapOf<String, Any>()
+
+    @Suppress("UNCHECKED_CAST")
+    suspend fun <T : Any> getOrCreate(cacheKey: String, factory: () -> T): T {
+        val instance = cachedByKey[cacheKey] as T?
+        if (instance != null) {
+            return instance
+        }
+        mutex.withLock {
+            var obj = cachedByKey[cacheKey] as T?
+            if (obj != null) {
+                return obj
+            }
+            obj = factory.invoke()
+            cachedByKey[cacheKey] = obj
+            return obj
+        }
+    }
+
+}
+
+open class KSimpleDiScope : KSimpleDiStorage(), Disposable {
 
     val initMutex = Mutex()
 
@@ -437,6 +485,8 @@ open class KSimpleDiScope() : KSimpleDiStorage(), Disposable {
     private val factoriesInInitOrder = mutableListOf<InstanceType<*>>()
     private val childScopes = mutableListOf<ChildScopeInstance<KSimpleDiScope>>()
     private val phasesFunctions = mutableMapOf<Phase, MutableList<suspend () -> Unit>>()
+
+    private val cache = SimpleInstanceCache()
 
     /**
      * Add a function to run before scope start
@@ -525,17 +575,26 @@ open class KSimpleDiScope() : KSimpleDiStorage(), Disposable {
         return FactoryInstance(factory)
     }
 
-    inline fun <reified T : Any> factoryWithParams(factory: InstanceType.ParamFactory<T>): FactoryParamsInstance<T> {
+    inline fun <reified T : Any> factoryWithParams(
+        noinline keyProvider: ((params: Array<Any>) -> String)? = null,
+        factory: InstanceType.ParamFactory<T>
+    ): FactoryParamsInstance<T> {
         instance(factory)
         return FactoryParamsInstance(factory)
     }
 
-    inline fun <reified T : Any, P1> factoryWithParams(factory: InstanceType.ParamFactory1<T, P1>): FactoryParam1Instance<T, P1> {
+    inline fun <reified T : Any, P1> factoryWithParams(
+        noinline keyProvider: ((param: P1) -> String)? = null,
+        factory: InstanceType.ParamFactory1<T, P1>
+    ): FactoryParam1Instance<T, P1> {
         instance(factory)
         return FactoryParam1Instance(factory)
     }
 
-    inline fun <reified T : Any, P1, P2> factoryWithParams(factory: InstanceType.ParamFactory2<T, P1, P2>): FactoryParams2Instance<T, P1, P2> {
+    inline fun <reified T : Any, P1, P2> factoryWithParams(
+        noinline keyProvider: ((param: P1, P2) -> String)? = null,
+        factory: InstanceType.ParamFactory2<T, P1, P2>
+    ): FactoryParams2Instance<T, P1, P2> {
         instance(factory)
         return FactoryParams2Instance(factory)
     }
@@ -550,11 +609,32 @@ open class KSimpleDiScope() : KSimpleDiStorage(), Disposable {
         return FactoryParam4Instance(factory)
     }
 
+    inline fun <reified T : Any> cached(
+        eager: Boolean = false,
+        factory: InstanceType.Factory<T>,
+        key: String
+    ): Instance<T> {
+        return singletonWithKey(key, eager, factory)
+    }
+
     inline fun <reified T : Any> singleton(
         eager: Boolean = false,
         factory: InstanceType.Factory<T>,
     ): Instance<T> {
-        val instance = InstanceType.Singleton(this, factory, eager)
+        return singletonWithKey(null, eager, factory)
+    }
+
+    inline fun <reified T : Any> singletonWithKey(
+        key: String? = null,
+        eager: Boolean = false,
+        factory: InstanceType.Factory<T>,
+    ): Instance<T> {
+        val instance = InstanceType.Singleton(
+            this,
+            factory,
+            eager,
+            toCacheKey(T::class, key)
+        )
         instance(instance)
         return instance
     }
@@ -583,7 +663,8 @@ open class KSimpleDiScope() : KSimpleDiStorage(), Disposable {
             eager = eager,
             startAsync = startAsync,
             startFun = start,
-            stopFun = stop
+            stopFun = stop,
+            key = toCacheKey(T::class, null)
         )
         instance(instance)
         return instance
@@ -644,12 +725,12 @@ open class KSimpleDiScope() : KSimpleDiStorage(), Disposable {
     }
 
     private suspend fun initAll() {
-        instances.forEach { it.value.init() }
+        instancesByKey.forEach { it.value.init() }
         invokeChildScopes { it.initAll() }
     }
 
     private suspend fun forceInitSingletons() {
-        instances.forEach {
+        instancesByKey.forEach {
             val factory = it.value
             if (factory is InstanceType.Singleton) {
                 factory.forceInit()
@@ -659,7 +740,7 @@ open class KSimpleDiScope() : KSimpleDiStorage(), Disposable {
     }
 
     private suspend fun forceInitServices() {
-        instances.forEach {
+        instancesByKey.forEach {
             val factory = it.value
             if (factory is InstanceType.Service) {
                 factory.forceInit()
@@ -673,6 +754,8 @@ open class KSimpleDiScope() : KSimpleDiStorage(), Disposable {
             block(child.scopeFactory.invoke())
         }
     }
+
+
 }
 
 private fun <T> List<T>.copyOf(): List<T> {

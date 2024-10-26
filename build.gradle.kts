@@ -11,6 +11,9 @@ plugins {
     alias(libs.plugins.kotlin.dokka)
     alias(libs.plugins.completeKotlin) apply false
     alias(libs.plugins.gradleRelease)
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.androidLibrary) apply false
+    alias(libs.plugins.androidApplication) apply false
 }
 
 java {
@@ -26,8 +29,8 @@ kotlin {
 
 idea {
     module {
-        setDownloadSources(true)
-        setDownloadJavadoc(true)
+        isDownloadSources = true
+        isDownloadJavadoc = true
     }
 }
 

@@ -1,7 +1,10 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.dokka)
+    alias(libs.plugins.androidLibrary) //<- Android Gradle Plugin for android target libraries
 }
 
 // only for developers
@@ -11,22 +14,43 @@ if (System.getenv("IS_CI") == null) {
     }
 }
 
+android {
+    namespace = "org.codemucker.kserialize"
+
+    compileSdk = 27
+    compileSdkVersion = "android-27"
+
+    defaultConfig {
+        minSdk = 27
+        compileSdk = 27
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.toVersion(libs.versions.java.target.get().toInt())
+        targetCompatibility = JavaVersion.toVersion(libs.versions.java.target.get().toInt())
+    }
+}
+
 kotlin {
     applyDefaultHierarchyTemplate()
-    jvm()
+    androidTarget()
+    iosX64()
     js {
         browser()
         nodejs()
     }
-//    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
-//    wasmJs{
-//        browser()
-//        nodejs()
-//    }
+    jvm()
     linuxX64()
     macosX64()
     mingwX64()
-    iosX64()
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+        nodejs()
+    }
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmWasi(){
+        nodejs()
+    }
 
     sourceSets {
         commonMain {
