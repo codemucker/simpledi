@@ -5,14 +5,19 @@
     } }:
 (
     pkgs.buildFHSUserEnv {
-        name = "myda-dev";
+        name = "myda-dev2";
         targetPkgs = pkgs: (with pkgs; [
             libtool
-            nodejs-18_x
+            nodejs_20
             zlib
             jdk17
             vscode
             android-studio
+            # for x64linux/posix kotlin kmp (inside kotlin dist)
+            # Else get libcrypt.so.1: cannot open shared object file: No such file or directory on nixos
+            # remember to reload gradle daemon
+            libxcrypt
+            libxcrypt-legacy
     ]);
     runScript = "bash";
 }).env
