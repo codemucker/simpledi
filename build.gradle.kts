@@ -63,8 +63,9 @@ release {
 
 rootProject.plugins.withType<NodeJsRootPlugin> {
     rootProject.the<NodeJsRootExtension>().apply {
-        version = "20.11.1"
-        // nodeDownloadBaseUrl = "https://nodejs.org/download/v8-canary"
+        // support wasm
+        version = "21.0.0-v8-canary202309143a48826a08"
+        downloadBaseUrl = "https://nodejs.org/download/v8-canary"
     }
 }
 
