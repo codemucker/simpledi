@@ -6,9 +6,10 @@ package org.codemucker.ksimpledi
  * Also see https://proandroiddev.com/simplest-dependency-injection-tool-using-kotlin-fun-interfaces-and-sealed-classes-988fec67b8ff
  *
  * Original author Aleksei Cherniaev, klukwist@gmail.com
+ * Modified by Bert van Brakel
  *
  * THis version has been heavily modified to also support starting/stopping 'services', configurable 'modules', eager
- * loading etc, and couroutine support
+ * loading etc, and co-routine support
  */
 
 import kotlinx.coroutines.CoroutineScope
@@ -68,12 +69,12 @@ interface SimpleDiPlatformHelper {
     }
 }
 
-private object platformHelper : SimpleDiPlatformHelper
+private object PlatformHelper : SimpleDiPlatformHelper
 
 /**
  * Common helper with the default common code implementation
  */
-fun getCommonDefaultHelper(): SimpleDiPlatformHelper = platformHelper
+fun getCommonDefaultHelper(): SimpleDiPlatformHelper = PlatformHelper
 
 /**
  * Return a platform customised helper
@@ -422,7 +423,7 @@ sealed class KSimpleDiStorage(
     }
 }
 
-public enum class Phase {
+enum class Phase {
     BeforeStart,
     AfterStart,
     BeforeStop,
@@ -497,11 +498,11 @@ open class KSimpleDiScope() : KSimpleDiStorage(), Disposable {
      */
     fun <TScope : KSimpleDiScope> childScope(scopeFactory: () -> TScope): ChildScopeInstance<TScope> {
         val instance = ChildScopeInstance(scopeFactory)
-        childScopes.add(instance as ChildScopeInstance<KSimpleDiScope>)
+        childScopes.add(instance)
         return instance
     }
 
-    class ChildScopeInstance<TScope : KSimpleDiScope>(val scopeFactory: () -> TScope) {
+    class ChildScopeInstance<out TScope : KSimpleDiScope>(val scopeFactory: () -> TScope) {
 
         val scope: TScope by lazy {
             scopeFactory()
