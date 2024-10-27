@@ -4,18 +4,11 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.dokka)
-    alias(libs.plugins.androidLibrary) //<- Android Gradle Plugin for android target libraries
+    alias(libs.plugins.androidLibrary)
 }
 
-apply{
+apply {
     from("$rootDir/gradle/include/android-library.gradle")
-}
-
-// only for developers
-if (System.getenv("IS_CI") == null) {
-    apply {
-        plugin("com.louiscad.complete-kotlin")
-    }
 }
 
 kotlin {
@@ -55,7 +48,7 @@ kotlin {
         }
         val jvmMain by getting {
             dependencies {
-                implementation(kotlin("stdlib-jdk8"))
+                //implementation(kotlin("stdlib-jdk8"))
             }
         }
         val jvmTest by getting {

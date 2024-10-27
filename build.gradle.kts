@@ -59,8 +59,6 @@ release {
     }
 }
 
-
-
 rootProject.plugins.withType<NodeJsRootPlugin> {
     rootProject.the<NodeJsRootExtension>().apply {
         // support wasm
@@ -68,7 +66,6 @@ rootProject.plugins.withType<NodeJsRootPlugin> {
         downloadBaseUrl = "https://nodejs.org/download/v8-canary"
     }
 }
-
 
 tasks.withType<org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstallTask>()
     .configureEach {
@@ -96,6 +93,11 @@ allprojects {
 subprojects {
     apply(plugin = "maven-publish")
     apply(plugin = "org.jetbrains.dokka")
+
+    // only for developers
+    if (System.getenv("IS_CI") == null) {
+        apply(plugin = "com.louiscad.complete-kotlin")
+    }
 
     val javadocJar by tasks.registering(Jar::class) {
         archiveClassifier.set("javadoc")
