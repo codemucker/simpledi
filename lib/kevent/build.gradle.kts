@@ -4,25 +4,13 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.dokka)
-    alias(libs.plugins.androidLibrary) //<- Android Gradle Plugin for android target libraries
+   // alias(libs.plugins.androidLibrary) //<- Android Gradle Plugin for android target libraries
     //alias(libs.plugins.androidApplication)  //<- Android Gradle Plugin for applications
     //alias(libs.plugins.kotlin.android)
 }
 
-android {
-    namespace = "org.codemucker.kevent"
-
-    compileSdk = 27
-    compileSdkVersion = "android-27"
-
-    defaultConfig {
-        minSdk = 27
-        compileSdk = 27
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.toVersion(libs.versions.java.target.get().toInt())
-        targetCompatibility = JavaVersion.toVersion(libs.versions.java.target.get().toInt())
-    }
+apply{
+    from("$rootDir/gradle/include/android-library.gradle")
 }
 
 // only for developers
@@ -51,22 +39,11 @@ kotlin {
         browser()
         nodejs()
     }
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmWasi {
-        nodejs()
-    }
-    androidTarget("main") {
-
-
-//        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-//        compilerOptions {
-//            jvmTarget.set(JvmTarget.JVM_11)
-//        }
-//
-//        compilations.all {
-//
-//        }
-    }
+//    @OptIn(ExperimentalWasmDsl::class)
+//    wasmWasi {
+//        nodejs()
+//    }
+    androidTarget()
     sourceSets {
         commonMain {
             dependencies {

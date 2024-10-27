@@ -7,6 +7,10 @@ plugins {
     //alias(libs.plugins.androidApplication)  //<- Android Gradle Plugin for applications
 }
 
+apply{
+    from("$rootDir/gradle/include/android-library.gradle")
+}
+
 // only for developers
 if (System.getenv("IS_CI") == null) {
     apply {
@@ -14,23 +18,9 @@ if (System.getenv("IS_CI") == null) {
     }
 }
 
-android {
-    namespace = "org.codemucker.kserialize"
-
-    compileSdk = 27
-    compileSdkVersion = "android-27"
-
-    defaultConfig {
-        minSdk = 27
-        compileSdk = 27
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.toVersion(libs.versions.java.target.get().toInt())
-        targetCompatibility = JavaVersion.toVersion(libs.versions.java.target.get().toInt())
-    }
-}
-
 kotlin {
+    jvmToolchain(libs.versions.java.target.get().toInt())
+
     applyDefaultHierarchyTemplate()
     androidTarget()
     iosX64()
@@ -47,10 +37,10 @@ kotlin {
         browser()
         nodejs()
     }
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmWasi(){
-        nodejs()
-    }
+//    @OptIn(ExperimentalWasmDsl::class)
+//    wasmWasi(){
+//        nodejs()
+//    }
 
     sourceSets {
         commonMain {

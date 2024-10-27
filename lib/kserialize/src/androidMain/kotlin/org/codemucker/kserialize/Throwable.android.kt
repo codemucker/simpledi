@@ -1,3 +1,3 @@
-package org.codemucker.klang
+package org.codemucker.kserialize
 
 actual fun getPlatformSerializerFactory()  = getCommonDefaultSerializerFactory()

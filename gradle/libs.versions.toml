@@ -1,13 +1,14 @@
 [versions]
 # java
 # minimuim supported java target version
-java-target = "11"
+java-source = "17"
+java-target = "17"
 
 # libs
 junit-jupiter = "5.9.3"
-kotlinx-coroutines = "1.7.3"
-kotlinx-datetime = "0.5.0"
-kotlinx-serialization = "1.6.2"
+kotlinx-coroutines = "1.9.0"
+kotlinx-datetime = "0.6.1"
+kotlinx-serialization = "1.7.3"
 
 uuid-benasher44 = "0.8.4"
 uri-eygraber = "0.0.16"
