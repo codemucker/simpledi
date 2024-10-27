@@ -16,12 +16,12 @@ plugins {
     alias(libs.plugins.androidApplication) apply false
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(libs.versions.java.target.get().toInt()))
-        //vendor.set(JvmVendorSpec.ADOPTIUM)
-    }
-}
+//java {
+//    toolchain {
+//        languageVersion.set(JavaLanguageVersion.of(libs.versions.java.target.get().toInt()))
+//        //vendor.set(JvmVendorSpec.ADOPTIUM)
+//    }
+//}
 
 kotlin {
     jvmToolchain(libs.versions.java.target.get().toInt())
