@@ -82,8 +82,8 @@ interface ThrowableSerializerFactory {
         return mapOf()
     }
 
-    fun extractClassName(obj:Any) : String {
-        return obj::class.simpleName?: "unknown"
+    fun extractClassName(obj: Any): String {
+        return obj::class.simpleName ?: "unknown"
     }
 
     // platforms specific code to override and provide a custom value if availabel

@@ -31,11 +31,11 @@ typealias Fail<TError> = OkOrFail.Fail<TError>
  *
  */
 @Serializable
-sealed class OkOrFail<out TValue, out TError>  {
+sealed class OkOrFail<out TValue, out TError> {
     data class Ok<out TValue>(val value: TValue) : OkOrFail<TValue, Nothing>() {
 
         //@JvmName("mapValue")
-        inline fun <T> map(block: (value:TValue) -> T): T {
+        inline fun <T> map(block: (value: TValue) -> T): T {
             return block(this.value)
         }
     }
@@ -43,7 +43,7 @@ sealed class OkOrFail<out TValue, out TError>  {
     class Fail<out TError>(val error: TError) : OkOrFail<Nothing, TError>(), ToException {
 
         //@JvmName("mapError")
-        inline fun <T> map(block: (error:TError) -> T): T {
+        inline fun <T> map(block: (error: TError) -> T): T {
             return block(error)
         }
 
@@ -60,14 +60,14 @@ sealed class OkOrFail<out TValue, out TError>  {
 //        return block(this)
 //    }
 
-    inline fun <T> to(ok: (value:TValue) -> T, fail: (TError) -> T): T {
+    inline fun <T> to(ok: (value: TValue) -> T, fail: (TError) -> T): T {
         when (this) {
             is Ok -> return ok(this.value)
             is Fail -> return fail(this.error)
         }
     }
 
-    inline fun on(ok: (value:TValue) -> Unit, fail: (TError) -> Unit) {
+    inline fun on(ok: (value: TValue) -> Unit, fail: (TError) -> Unit) {
         when (this) {
             is Ok -> ok(this.value)
             is Fail -> fail(this.error)

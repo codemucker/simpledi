@@ -1,5 +1,5 @@
 package org.codemucker.klang
 
 interface Builder<T> {
-    fun build():T
+    fun build(): T
 }

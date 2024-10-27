@@ -5,7 +5,7 @@ import com.benasher44.uuid.uuidFrom
 
 typealias Uuid = com.benasher44.uuid.Uuid
 
-fun Uuid(uuidString:String) = uuidFrom(uuidString)
+fun Uuid(uuidString: String) = uuidFrom(uuidString)
 
 fun Uuid() = uuid4()
 

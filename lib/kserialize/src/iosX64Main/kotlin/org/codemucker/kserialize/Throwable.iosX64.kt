@@ -1,3 +1,3 @@
 package org.codemucker.kserialize
 
-actual fun getPlatformSerializerFactory()  = getCommonDefaultSerializerFactory()
+actual fun getPlatformSerializerFactory() = getCommonDefaultSerializerFactory()

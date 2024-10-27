@@ -1,6 +1,6 @@
 package org.codemucker.klang
 
-typealias Uri =  com.eygraber.uri.Uri
+typealias Uri = com.eygraber.uri.Uri
 
 fun Uri.isFtp(): Boolean = scheme == "ftp"
 fun Uri.isHttp(): Boolean = scheme == "http" || scheme == "https"

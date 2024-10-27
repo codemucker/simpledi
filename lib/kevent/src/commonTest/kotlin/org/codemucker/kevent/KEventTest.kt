@@ -10,14 +10,15 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class KEventTest {
-    @Test fun singletonTest() {
+    @Test
+    fun singletonTest() {
         val scope = KSimpleDiScope()
 
-        val bar = scope.singleton{
+        val bar = scope.singleton {
             Bar()
         }
-        val foo = scope.singleton{
-            Foo( bar = bar.get() )
+        val foo = scope.singleton {
+            Foo(bar = bar.get())
         }
 
         val f1 = foo.get()
@@ -28,14 +29,15 @@ class KEventTest {
         assertSame(f1, f3, "expect same instance for singleton")
     }
 
-    @Test fun factoryTest() {
+    @Test
+    fun factoryTest() {
         val scope = KSimpleDiScope()
 
-        val bar = scope.singleton{
+        val bar = scope.singleton {
             Bar()
         }
         val foo = scope.factory {
-            Foo( bar = bar.get() )
+            Foo(bar = bar.get())
         }
 
         val f1 = foo.get()
@@ -46,25 +48,26 @@ class KEventTest {
         assertNotSame(f1, f3, "expect different instances for factory")
     }
 
-    @Test fun factoryParamsTest() {
+    @Test
+    fun factoryParamsTest() {
         val scope = KSimpleDiScope()
 
-        val bar = scope.factoryWithParams { p1:String->
-            Bar( p1 )
+        val bar = scope.factoryWithParams { p1: String ->
+            Bar(p1)
         }
 
         val b1 = bar.get("one")
         val b2 = bar.get("two")
-        val b3 = scope.getInstance<Bar>( {params("three")})
-        val b4 = scope.getInstanceWith<Bar>( "four")
+        val b3 = scope.getInstance<Bar>({ params("three") })
+        val b4 = scope.getInstanceWith<Bar>("four")
 
-        assertTrue(  b1.text == "one" )
-        assertTrue(  b2.text == "two" )
-        assertTrue(  b3.text == "three" )
-        assertTrue(  b4.text == "four" )
+        assertTrue(b1.text == "one")
+        assertTrue(b2.text == "two")
+        assertTrue(b3.text == "three")
+        assertTrue(b4.text == "four")
     }
 }
 
-class Bar(val text:String?= null)
+class Bar(val text: String? = null)
 data class Foo(val bar: Bar)
 

@@ -1,6 +1,10 @@
 package org.codemucker.klang
 
-import kotlinx.datetime.*
+import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.periodUntil
+import kotlinx.datetime.toInstant
 
 fun LocalDateTime.tookTo(other: LocalDateTime, timezone: TimeZone = TimeZone.UTC): DateTimePeriod {
     val thisInstant = this.toInstant(timezone)

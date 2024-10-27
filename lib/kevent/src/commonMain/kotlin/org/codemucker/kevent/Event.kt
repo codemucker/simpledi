@@ -2,8 +2,8 @@ package org.codemucker.kevent
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import org.codemucker.klang.nowUtc
 import org.codemucker.klang.Uuid
+import org.codemucker.klang.nowUtc
 import org.codemucker.kserialize.UuidSerializer
 
 interface Event

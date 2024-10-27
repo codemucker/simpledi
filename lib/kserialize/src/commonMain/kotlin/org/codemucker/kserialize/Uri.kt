@@ -6,7 +6,7 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-typealias Uri =  com.eygraber.uri.Uri
+typealias Uri = com.eygraber.uri.Uri
 
 object UriSerializer : KSerializer<Uri> {
     override val descriptor = PrimitiveSerialDescriptor("Uri", PrimitiveKind.STRING)
