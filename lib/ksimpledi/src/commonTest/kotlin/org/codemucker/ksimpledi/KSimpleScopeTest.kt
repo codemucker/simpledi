@@ -4,7 +4,8 @@
 package org.codemucker.ksimpledi
 
 import kotlin.test.Test
-import kotlin.test.assertFalse
+import kotlin.test.assertNotSame
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class KSimpleScopeTest {
@@ -23,8 +24,8 @@ class KSimpleScopeTest {
         val f3 = scope.getInstance<Foo>()
 
 
-        assertTrue(f1 === f2, "expect same instance for singleton")
-        assertTrue(f1 === f3, "expect same instance for singleton")
+        assertSame(f1, f2, "expect same instance for singleton")
+        assertSame(f1, f3, "expect same instance for singleton")
     }
 
     @Test fun factoryTest() {
@@ -42,8 +43,8 @@ class KSimpleScopeTest {
         val f3 = scope.getInstance<Foo>()
 
 
-        assertFalse(f1 === f2, "expect different instances for factory")
-        assertFalse(f1 === f3, "expect different instances for factory")
+        assertNotSame(f1, f2, "expect different instances for factory")
+        assertNotSame(f1, f3, "expect different instances for factory")
     }
 
     @Test fun factoryParamsTest() {
