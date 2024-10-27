@@ -39,15 +39,15 @@ kotlin {
         commonMain {
             dependencies {
                 api(kotlin("stdlib"))
-                api(project(":lib:klang"))
-                api(project(":lib:kserialize"))
+                api(projects.lib.klang)
+                api(projects.lib.kserialize)
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
-                implementation(project(":lib:ksimpledi"))
+                api(projects.lib.ksimpledi)
             }
         }
         jvmMain {

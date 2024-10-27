@@ -38,7 +38,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":lib:klang"))
+                api(projects.lib.klang)
             }
         }
         commonTest {

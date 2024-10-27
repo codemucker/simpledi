@@ -38,7 +38,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(kotlin("stdlib"))
-                api(project(":lib:klang"))
+                api(projects.lib.klang)
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
