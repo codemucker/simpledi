@@ -68,7 +68,3 @@ kotlin {
     }
     tasks.register("testClasses")
 }
-
-repositories {
-    mavenCentral()
-}
