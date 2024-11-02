@@ -1,8 +1,8 @@
 [versions]
 # java
 # minimuim supported java target version
-java-source = "17"
-java-target = "17"
+java-source = "21"
+java-target = "21"
 
 # libs
 junit-jupiter = "5.9.3"

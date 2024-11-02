@@ -5,12 +5,12 @@
     } }:
 (
     pkgs.buildFHSUserEnv {
-        name = "myda-dev2";
+        name = "codemucker-kotlin-dev";
         targetPkgs = pkgs: (with pkgs; [
             libtool
             nodejs_20
             zlib
-            jdk17
+            jdk21
             vscode
             android-studio
             # for x64linux/posix kotlin kmp (inside kotlin dist)
