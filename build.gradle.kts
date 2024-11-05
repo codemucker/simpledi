@@ -84,6 +84,13 @@ allprojects {
         google()
     }
 
+    // for now, disable android testing until we get it set up
+    tasks.withType<DefaultTask>().configureEach() {
+        if (name.endsWith("AndroidTest")) {
+            enabled = false
+        }
+    }
+
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
     }
