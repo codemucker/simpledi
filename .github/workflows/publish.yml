@@ -45,10 +45,11 @@ jobs:
       # The GITHUB_USERNAME and GITHUB_TOKEN need to correspond to the credentials environment variables used in
       # the publishing section of your build.gradle
       # see https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-gradle
-      - name: Publish to GitHub Packages
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: wrapper
+      - name: Publish to GitHub Packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # The GITHUB_REF tag comes in the format 'refs/tags/xxx'.
