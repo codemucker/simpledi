@@ -50,9 +50,16 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: wrapper
-      - name: Release with Gradle Release Plugin
+      - name: Build Project
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: ${{ secrets.CURRENT_GITHUB_USER }}
+        run: |
+          gradle build --stacktrace
+      - name: Publish Project
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: ${{ secrets.CURRENT_GITHUB_USER }}
         run: |
           echo "Github username: ${GITHUB_ACTOR}"
-          gradle -Prelease.useAutomaticVersion=true release
+          gradle publish

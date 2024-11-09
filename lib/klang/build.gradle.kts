@@ -58,10 +58,14 @@ kotlin {
             }
         }
         val jvmTest by getting {
-            dependencies {
+            dependencies
                 implementation(libs.junit.jupiter.engine)
             }
         }
     }
     tasks.register("testClasses")
+
+    androidTarget {
+        publishLibraryVariants("release", "debug")
+    }
 }

@@ -74,4 +74,8 @@ kotlin {
     }
 
     tasks.register("testClasses")
+
+    androidTarget {
+        publishLibraryVariants("release", "debug")
+    }
 }
