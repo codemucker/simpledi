@@ -15,7 +15,9 @@ kotlin {
     jvmToolchain(libs.versions.java.target.get().toInt())
 
     applyDefaultHierarchyTemplate()
-
+    androidTarget() {
+        publishLibraryVariants("release", "debug")
+    }
     iosX64()
     js {
         browser()
@@ -74,8 +76,4 @@ kotlin {
     }
 
     tasks.register("testClasses")
-
-    androidTarget {
-        publishLibraryVariants("release", "debug")
-    }
 }

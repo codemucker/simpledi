@@ -14,7 +14,9 @@ kotlin {
     jvmToolchain(libs.versions.java.target.get().toInt())
 
     applyDefaultHierarchyTemplate()
-    androidTarget()
+    androidTarget() {
+        publishLibraryVariants("release", "debug")
+    }
     iosX64()
     js {
         browser()
@@ -58,14 +60,10 @@ kotlin {
             }
         }
         val jvmTest by getting {
-            dependencies
+            dependencies {
                 implementation(libs.junit.jupiter.engine)
             }
         }
     }
     tasks.register("testClasses")
-
-    androidTarget {
-        publishLibraryVariants("release", "debug")
-    }
 }
