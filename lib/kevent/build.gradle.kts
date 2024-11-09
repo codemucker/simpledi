@@ -36,6 +36,12 @@ kotlin {
 //    }
     androidTarget()
     sourceSets {
+        all {
+            languageSettings.apply {
+                optIn("kotlin.uuid.ExperimentalUuidApi")
+                //   optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            }
+        }
         commonMain {
             dependencies {
                 api(kotlin("stdlib"))

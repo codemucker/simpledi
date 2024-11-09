@@ -21,9 +21,9 @@
                libtool
                nodejs_20
                zlib
-              jdk21
+               jdk21
                vscode
-               android-studio
+               androidStudioPackages.canary
               # see https://github.com/facebook/react-native/issues/3091
                android-tools
               # disabled for now, until we run it direct on hardware

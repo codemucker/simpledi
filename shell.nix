@@ -15,6 +15,7 @@
             android-studio
             # see https://github.com/facebook/react-native/issues/3091
             android-tools
+            # aider-chat
             # disabled for now, until we run it direct on hardware
             # android-udev-rules
             # for x64linux/posix kotlin kmp (inside kotlin dist)

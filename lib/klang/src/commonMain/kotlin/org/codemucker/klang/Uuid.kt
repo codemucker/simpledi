@@ -1,11 +1,14 @@
 package org.codemucker.klang
 
-import com.benasher44.uuid.uuid4
-import com.benasher44.uuid.uuidFrom
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
-typealias Uuid = com.benasher44.uuid.Uuid
+@OptIn(ExperimentalUuidApi::class)
+typealias Uuid = Uuid
 
-fun Uuid(uuidString: String) = uuidFrom(uuidString)
+@OptIn(ExperimentalUuidApi::class)
+fun Uuid(uuidString: String) = Uuid.Companion.parse(uuidString)
 
-fun Uuid() = uuid4()
+@OptIn(ExperimentalUuidApi::class)
+fun Uuid() = Uuid.Companion.random()
 
