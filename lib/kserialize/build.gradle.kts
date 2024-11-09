@@ -38,6 +38,12 @@ kotlin {
 //    }
 
     sourceSets {
+        all {
+            languageSettings.apply {
+                optIn("kotlin.uuid.ExperimentalUuidApi")
+                //   optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            }
+        }
         commonMain {
             dependencies {
                 api(projects.lib.klang)
