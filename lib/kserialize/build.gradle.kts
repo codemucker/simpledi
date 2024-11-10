@@ -19,6 +19,7 @@ kotlin {
         publishLibraryVariants("release", "debug")
     }
     iosX64()
+    iosArm64()
     iosSimulatorArm64()
     js {
         browser()
