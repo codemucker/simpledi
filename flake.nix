@@ -11,8 +11,14 @@
             inherit system;
             config.allowUnfree = true;
         });
+        aliasScript = ''
+           alias g='./gradlew'
+        '';
       in {
         devShell = pkgs.mkShell {
+          shellHook = ''
+            ${aliasScript}
+          '';
           buildInputs = with pkgs; [
             # nodePackages.pnpm
             # nodePackages.typescript
