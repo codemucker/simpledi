@@ -17,3 +17,15 @@ fun Uri.isSsh(): Boolean = scheme == "ssh"
 fun Uri.isUrl(): Boolean = isFtp() || isHttp() || isWebsocket()
 fun Uri.isUrn(): Boolean = scheme == "urn"
 fun Uri.isWebsocket(): Boolean = scheme == "ws" || scheme == "wss"
+
+data class UriParseError(val invalidUri: String, val exception: Exception) {
+    val message get() = exception.message
+}
+
+fun com.eygraber.uri.Uri.Companion.parseOr(uriString: String): OkOrFail<Uri, UriParseError> {
+    try {
+        return OkOrFail.Ok(Uri.parse(uriString))
+    } catch (e: Exception) {
+        return OkOrFail.Fail(UriParseError(uriString, e))
+    }
+}

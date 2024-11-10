@@ -128,6 +128,20 @@ sealed class OkOrFail<out TValue, out TError> {
         }
     }
 
+    fun getOr(defaultValue: @UnsafeVariance TValue): TValue {
+        return when (this) {
+            is Ok -> value
+            is Fail -> defaultValue
+        }
+    }
+
+    fun getOr(defaultValueSupplier: () -> @UnsafeVariance TValue): TValue {
+        return when (this) {
+            is Ok -> value
+            is Fail -> defaultValueSupplier()
+        }
+    }
+
     companion object {
 
         fun OkReturnNothing() = Ok(Unit)
