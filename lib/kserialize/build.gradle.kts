@@ -14,6 +14,9 @@ apply {
 kotlin {
     jvmToolchain(libs.versions.java.target.get().toInt())
 
+    val os =
+        org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.getCurrentOperatingSystem()
+
     applyDefaultHierarchyTemplate()
     androidTarget() {
         publishLibraryVariants("release", "debug")
@@ -28,7 +31,9 @@ kotlin {
     jvm()
     linuxX64()
     macosX64()
-    mingwX64()
+    if (os.isWindows) {
+        mingwX64()
+    }
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()

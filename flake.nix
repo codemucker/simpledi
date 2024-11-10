@@ -27,7 +27,7 @@
                libtool
                nodejs_20
                zlib
-               jdk21
+               jdk17
                vscode
                androidStudioPackages.canary
               # see https://github.com/facebook/react-native/issues/3091

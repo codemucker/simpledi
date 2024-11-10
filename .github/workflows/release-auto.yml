@@ -22,10 +22,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
           server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
@@ -42,20 +42,26 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-      # Run release task
-      # The GITHUB_USERNAME and GITHUB_TOKEN need to correspond to the credentials environment variables used in
-      # the publishing section of your build.gradle
-      # see https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: wrapper
+      - name: Cache KMP tooling
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.konan
+          key: ${{ runner.os }}-konan-${{ hashFiles('**/*.gradle.kts') }}
       - name: Build Project
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USER: ${{ secrets.CURRENT_GITHUB_USER }}
         run: |
           gradle build --stacktrace
+      # Run release task
+      # The GITHUB_USERNAME and GITHUB_TOKEN need to correspond to the credentials environment variables used in
+      # the publishing section of your build.gradle
+      # see https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-gradle
       - name: Publish Project
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -63,3 +69,86 @@ jobs:
         run: |
           echo "Github username: ${GITHUB_ACTOR}"
           gradle publish
+  # see https://www.marcogomiero.com/posts/2024/kmp-ci-macos-github-releases/
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: macos-14
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu'
+      - name: Setup build cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      # Setup git config of the GitHub Actions Bot
+      - name: Setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: wrapper
+      - name: Cache KMP tooling
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.konan
+          key: ${{ runner.os }}-konan-${{ hashFiles('**/*.gradle.kts') }}
+      - name: Build Project
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: ${{ secrets.CURRENT_GITHUB_USER }}
+        run: |
+          gradle build --stacktrace
+      # Developer ID Application
+      - name: Import signing certificate
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.SIGNING_CERTIFICATE_P12_DATA_MACOS }}
+          p12-password: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD_MACOS }}
+      - name: Create path variables
+        id: path_variables
+        run: |
+          tag=$(git describe --tags --abbrev=0 --match "*-desktop")
+          version=$(echo "$tag" | sed 's/-desktop$//')
+          name="FeedFlow-${version}.dmg"
+          path="desktopApp/build/release/main-release/dmg/${name}"
+          echo "TAG=$tag" >> $GITHUB_ENV
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "RELEASE_PATH=$path" >> $GITHUB_ENV          
+
+      - name: Create DMG
+        run: gradle packageReleaseDmg
+
+      - name: Notarization
+        run: |
+          xcrun notarytool submit $RELEASE_PATH --apple-id $APPLE_ID_NOTARIZATION --password $NOTARIZATION_PWD --team-id $APPSTORE_TEAM_ID --wait
+          xcrun stapler staple $RELEASE_PATH
+        env:
+          APPLE_ID_NOTARIZATION: ${{ secrets.APPLE_ID_NOTARIZATION }}
+          APPSTORE_TEAM_ID: ${{ secrets.APPSTORE_TEAM_ID }}
+          NOTARIZATION_PWD: ${{ secrets.NOTARIZATION_PWD }}
+          RELEASE_PATH: ${{ env.RELEASE_PATH }}
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ env.RELEASE_PATH }}
+          tag: ${{ env.TAG }}
+          overwrite: true
+          draft: true
+          body: "Release ${{ env.VERSION }}"
