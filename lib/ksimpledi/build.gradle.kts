@@ -25,7 +25,7 @@ kotlin {
     jvm()
     linuxX64()
     macosX64()
-    //mingwX64()
+    mingwX64()
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
